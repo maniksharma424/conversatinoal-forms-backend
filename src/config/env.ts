@@ -1,9 +1,10 @@
 import dotenvSafe from "dotenv-safe";
+import path from "path";
 
 dotenvSafe.config({
-  example: ".env.example", // Path to example environment variables
+  example: path.join(__dirname, "../.env.example"),
+  path: path.join(__dirname, "../.env"),
   allowEmptyValues: false, // Do not allow empty variables
-  path: ".env", // Path to your actual environment variables
 });
 
 interface Env {
