@@ -28,7 +28,6 @@ export const AppDataSource = new DataSource({
     Conversation,
     ConversationMessage,
   ],
-  migrations: ["src/migration/**/*.ts"],
   subscribers: [],
   ssl:
     ENV.NODE_ENV === "prod"
