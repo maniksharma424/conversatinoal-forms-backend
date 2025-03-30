@@ -2,7 +2,8 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/data-source";
 import { ENV } from "./config/env";
-import { User, Form, Question, FormResponse } from "@/entities/index";
+import { User, Form, Question } from "./entities";
+import { FormResponse } from "./entities";
 
 // Initialize Express app
 const app = express();
