@@ -25,7 +25,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 // Routes
 app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Form Management API is booming" });
+  res.json({ message: "Form Management API is  booming" });
 });
 
 // User routes
