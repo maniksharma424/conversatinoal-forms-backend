@@ -37,12 +37,12 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.env.example' \
-            ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/conversatinoal-forms-backend/
+            ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/app/conversatinoal-forms-backend/
             
       - name: Restart application
         run: |
           ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
-            cd /home/ec2-user/app/conversatinoal-forms-backend && 
+            cd /home/ec2-user/app/app/conversatinoal-forms-backend && 
             npm ci && 
             npm run build && 
             cp .env dist/ && 
