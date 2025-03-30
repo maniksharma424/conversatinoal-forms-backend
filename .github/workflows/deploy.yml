@@ -43,8 +43,10 @@ jobs:
         run: |
           ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
             cd /home/ec2-user/app/conversatinoal-forms-backend && 
-            npm ci --production && 
+            npm ci && 
             npm run build && 
             cp .env dist/ && 
-            pm2 restart forms-api || pm2 start dist/index.js --node-args="-r tsconfig-paths/register" --name "forms-api"
+            pm2 delete forms-api || true && 
+            pm2 start dist/index.js --node-args="-r tsconfig-paths/register" --name "forms-api" && 
+            pm2 save
           '
