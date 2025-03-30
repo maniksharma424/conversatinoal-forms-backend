@@ -1,49 +1,39 @@
 #!/bin/bash
-set -e
+set -e  # Exit immediately if a command exits with a non-zero status
 
 echo "========================================"
 echo "Starting deployment script..."
 echo "========================================"
-DEPLOY_DIR="/home/ec2-user/app/conversatinoal-forms-backend"
+DEPLOY_DIR="/home/ec2-user/app/app/conversatinoal-forms-backend"
 
 # Navigate to project directory
 echo "Changing to project directory: $DEPLOY_DIR"
 cd $DEPLOY_DIR
 
-# Update from git repository (optional - useful if you're not using rsync for file transfer)
-# echo "Pulling latest code from repository..."
-# git pull origin main
-
-# Install dependencies including type definitions
-echo "Installing dependencies..."
-npm ci
-npm install --save-dev @types/dotenv-safe @types/express @types/cors @types/uuid @types/bcrypt
-
-# Create type declarations file if needed
-echo "Creating type declarations file..."
-mkdir -p src/types
-cat > src/types/declarations.d.ts << EOF
-declare module 'dotenv-safe';
-declare module 'express';
-declare module 'cors';
-declare module 'uuid';
-declare module 'bcrypt';
-EOF
-
-# Copy environment file (if it doesn't exist in source)
-echo "Ensuring environment file exists..."
+# Verify environment files exist
+echo "Checking environment files..."
 if [ ! -f .env ]; then
     echo "ERROR: .env file not found!"
     exit 1
 fi
 
+if [ ! -f .env.example ]; then
+    echo "ERROR: .env.example file not found!"
+    exit 1
+fi
+
+# Install dependencies
+echo "Installing dependencies..."
+npm ci
+
 # Build the application
 echo "Building the application..."
 npm run build
 
-# Ensure environment file is copied to build directory
+# Ensure environment files are copied to build directory
 echo "Copying environment files to build directory..."
-cp .env .env.example dist/
+cp .env dist/
+cp .env.example dist/
 
 # Restart the application with PM2
 echo "Restarting the application with PM2..."

@@ -10,10 +10,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           
@@ -30,13 +30,40 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
           
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          NODE_ENV=${{ secrets.NODE_ENV }}
+          PORT=${{ secrets.PORT }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          REFRESH_JWT_SECRET=${{ secrets.REFRESH_JWT_SECRET }}
+          EOF
+          
+          # Create .env.example file
+          cat > .env.example << EOF
+          NODE_ENV=
+          PORT=
+          DB_HOST=
+          DB_PORT=
+          DB_USERNAME=
+          DB_PASSWORD=
+          DB_DATABASE=
+          JWT_SECRET=
+          REFRESH_JWT_SECRET=
+          EOF
+          
       - name: Deploy to EC2
         run: |
+          # Ensure .env files are included in the deployment
           rsync -avz --delete \
             --exclude 'node_modules' \
             --exclude '.git' \
             --exclude '.github' \
-            --exclude '.env.example' \
             ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/app/conversatinoal-forms-backend/
             
       - name: Restart application
@@ -45,8 +72,15 @@ jobs:
             cd /home/ec2-user/app/app/conversatinoal-forms-backend && 
             npm ci && 
             npm run build && 
+            # Copy environment files to the dist directory
             cp .env dist/ && 
+            cp .env.example dist/ && 
+            # Restart with PM2
             pm2 delete forms-api || true && 
             pm2 start dist/index.js --node-args="-r tsconfig-paths/register" --name "forms-api" && 
             pm2 save
           '
+        shell: bash
+        # Adding 'set -e' to make the script exit if any command fails
+        env:
+          BASH_OPTS: -e
