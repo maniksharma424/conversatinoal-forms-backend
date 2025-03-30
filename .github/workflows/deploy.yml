@@ -36,7 +36,6 @@ jobs:
             --exclude 'node_modules' \
             --exclude '.git' \
             --exclude '.github' \
-            --exclude '.env.example' \
             ./ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/app/conversatinoal-forms-backend/
             
       - name: Restart application
