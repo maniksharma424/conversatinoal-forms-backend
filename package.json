@@ -4,6 +4,7 @@
   "description": "Conversational forms backend API",
   "main": "dist/index.js",
   "_moduleAliases": {
+    "@": "dist",
     "src": "dist"
   },
   "scripts": {

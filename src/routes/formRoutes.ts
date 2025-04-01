@@ -1,5 +1,6 @@
+import { getAllFormsController } from "@/controllers/formController";
 import { Router } from "express";
-import { getAllFormsController } from "src/controllers/formController";
+
 
 
 const formRoutes = Router();
