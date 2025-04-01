@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r tsconfig-paths/register dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register ,src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
     "build:prod": "tsc && cp .env.production dist/.env",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "npm run typeorm -- migration:generate -d src/config/data-source.ts src/migration/Migration",
@@ -20,7 +20,9 @@
     "create-db": "ts-node -r tsconfig-paths/register src/scripts/create-database.ts"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^0.2.2",
     "@types/pg": "^8.11.11",
+    "ai": "^4.2.8",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv-safe": "^8.2.0",

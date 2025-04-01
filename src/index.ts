@@ -4,6 +4,8 @@ import { AppDataSource } from "./config/data-source";
 import { ENV } from "./config/env";
 import { User, Form, Question } from "./entities";
 import { FormResponse } from "./entities";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { generateText, streamText } from "ai";
 
 // Initialize Express app
 const app = express();
@@ -23,10 +25,78 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Routes
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Form Management API is   wokring fine" });
+const deepseek = createDeepSeek({
+  apiKey: process.env.DEEPSEEK_API_KEY ?? "",
 });
+
+// Routes
+app.get("/", async (req: Request, res: Response) => {
+  const { text } = await generateText({
+    model: deepseek("deepseek-chat"),
+    prompt: "Write a vegetarian lasagna recipe for 4 people.",
+  });
+
+  res.json({ message: "Form Management API is   wokring fine", text:text });
+});
+
+
+
+
+
+
+// Add a streaming endpoint
+app.get("/stream", async (req: Request, res: Response) => {
+  // Set headers for streaming
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  try {
+    const result =  streamText({
+      model: deepseek("deepseek-chat"),
+      prompt: "Write a vegetarian lasagna recipe for 4 people.",
+    });
+
+    // Method 1: Using the helper function
+    // This automatically handles the streaming for you
+    result.pipeTextStreamToResponse(res);
+
+    // Method 2: Manual streaming (if you need more control)
+    /*
+    for await (const textPart of result.textStream) {
+      res.write(`data: ${JSON.stringify({ text: textPart })}\n\n`);
+      
+      // Optional: Force flush the response
+      if (res.flush) res.flush();
+    }
+    
+    // End the response when done
+    res.write('data: [DONE]\n\n');
+    res.end();
+    */
+  } catch (error) {
+    console.error("Streaming error:", error);
+    res.write(
+      `data: ${JSON.stringify({
+        error: "An error occurred during streaming",
+      })}\n\n`
+    );
+    res.end();
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // User routes
 app.get(

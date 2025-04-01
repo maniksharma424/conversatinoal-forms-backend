@@ -2,8 +2,8 @@ import dotenvSafe from "dotenv-safe";
 import path from "path";
 
 dotenvSafe.config({
-  example: path.join(__dirname, "../.env.example"),
-  path: path.join(__dirname, "../.env"),
+  example: path.join(process.cwd(), ".env.example"),
+  path: path.join(process.cwd(), ".env"),
   allowEmptyValues: false, // Do not allow empty variables
 });
 
