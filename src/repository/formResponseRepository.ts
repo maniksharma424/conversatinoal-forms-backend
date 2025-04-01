@@ -2,7 +2,7 @@
 import { IsNull, Not, Repository } from "typeorm";
 
 import { AppDataSource } from "../config/data-source";
-import { FormResponse } from "src/entities";
+import { FormResponse } from "../entities/formResponseEntity";
 
 export class FormResponseRepository {
   private repository: Repository<FormResponse>;

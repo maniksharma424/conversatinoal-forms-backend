@@ -6,8 +6,8 @@ import {
   OneToOne,
   CreateDateColumn,
 } from "typeorm";
-import { FormResponse } from "./form-response.entity";
-import { ConversationMessage } from "./conversation-message.entity";
+import { FormResponse } from "./formResponseEntity";
+import { ConversationMessage } from "./conversationMessageEntity";
 
 @Entity()
 export class Conversation {

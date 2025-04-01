@@ -2,7 +2,7 @@
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "../config/data-source";
-import { Form } from "src/entities";
+import { Form } from "../entities/formEntity";
 
 export class FormRepository {
   private repository: Repository<Form>;

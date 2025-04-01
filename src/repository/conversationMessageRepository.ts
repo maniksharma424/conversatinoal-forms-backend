@@ -2,7 +2,8 @@
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "../config/data-source";
-import { ConversationMessage } from "src/entities";
+import { ConversationMessage } from "../entities/conversationMessageEntity";
+
 
 export class ConversationMessageRepository {
   private repository: Repository<ConversationMessage>;

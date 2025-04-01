@@ -6,7 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
 } from "typeorm";
-import { Conversation } from "./conversation.entity";
+import { Conversation } from "./conversationEntity";
 
 @Entity()
 export class ConversationMessage {

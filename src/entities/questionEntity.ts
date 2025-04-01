@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
-import { Form } from "./form.entity";
+import { Form } from "./formEntity";
 
 @Entity()
 export class Question {

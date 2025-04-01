@@ -2,7 +2,7 @@
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "../config/data-source";
-import { Question } from "src/entities";
+import { Question } from "../entities/questionEntity";
 
 export class QuestionRepository {
   private repository: Repository<Question>;
