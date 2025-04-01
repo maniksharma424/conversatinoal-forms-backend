@@ -17,6 +17,7 @@ interface Env {
   DB_DATABASE: string;
   JWT_SECRET: string;
   REFRESH_JWT_SECRET: string;
+  DEEPSEEK_API_KEY:string
 }
 
 export const ENV: Env = {
@@ -29,6 +30,7 @@ export const ENV: Env = {
   DB_DATABASE: process.env.DB_DATABASE || "",
   JWT_SECRET: process.env.JWT_SECRET || "",
   REFRESH_JWT_SECRET: process.env.REFRESH_JWT_SECRET || "",
+  DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || "",
 };
 
 // Validate required variables
@@ -42,6 +44,7 @@ const requiredVars = [
   "DB_DATABASE",
   "JWT_SECRET",
   "REFRESH_JWT_SECRET",
+  "DEEPSEEK_API_KEY",
 ] as const;
 
 requiredVars.forEach((key) => {
