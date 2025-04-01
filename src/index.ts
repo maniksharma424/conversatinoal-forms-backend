@@ -6,6 +6,7 @@ import { User, Form, Question } from "./entities";
 import { FormResponse } from "./entities";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateText, streamText } from "ai";
+import formRoutes from "./routes/formRoutes";
 
 // Initialize Express app
 const app = express();
@@ -29,6 +30,9 @@ const deepseek = createDeepSeek({
   apiKey: process.env.DEEPSEEK_API_KEY ?? "",
 });
 
+
+app.use("/api/v1", formRoutes);
+
 // Routes
 app.get("/", async (req: Request, res: Response) => {
   const { text } = await generateText({
@@ -38,10 +42,6 @@ app.get("/", async (req: Request, res: Response) => {
 
   res.json({ message: "Form Management API is   wokring fine", text:text });
 });
-
-
-
-
 
 
 // Add a streaming endpoint
@@ -84,19 +84,6 @@ app.get("/stream", async (req: Request, res: Response) => {
     res.end();
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // User routes
 app.get(

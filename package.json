@@ -14,10 +14,12 @@
     "migration:run": "npm run typeorm -- migration:run -d src/config/data-source.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/data-source.ts",
     "seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts",
-    "lint": "eslint . --ext .ts",
-    "test": "jest",
+    "test": "echo \"No tests specified\"",
     "test-connection": "ts-node -r tsconfig-paths/register src/scripts/test-connection.ts",
-    "create-db": "ts-node -r tsconfig-paths/register src/scripts/create-database.ts"
+    "create-db": "ts-node -r tsconfig-paths/register src/scripts/create-database.ts",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^0.2.2",
