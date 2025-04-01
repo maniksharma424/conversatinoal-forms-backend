@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { AppDataSource } from "../config/data-source";
+import { AppDataSource } from "src/config/data-source";
+
 import { Form } from "src/entities";
 
 
