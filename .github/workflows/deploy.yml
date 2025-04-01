@@ -79,7 +79,7 @@ jobs:
             cp .env.example dist/ && 
             # Restart with PM2
             pm2 delete forms-api || true && 
-            pm2 start dist/index.js --node-args="-r tsconfig-paths/register" --name "forms-api" && 
+            pm2 start dist/index.js --name "forms-api" && 
             pm2 save
           '
         shell: bash

@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { AppDataSource } from "../config/data-source";
-import { Form } from "../entities/formEntity";
+import { Form } from "src/entities";
+
+
 
 export const getAllFormsController = async (
   req: Request,

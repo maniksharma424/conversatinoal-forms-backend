@@ -1,3 +1,6 @@
+// to use absolute paths in build 
+import "module-alias/register";
+
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/data-source";
@@ -30,7 +33,6 @@ const deepseek = createDeepSeek({
   apiKey: process.env.DEEPSEEK_API_KEY ?? "",
 });
 
-
 app.use("/api/v1", formRoutes);
 
 // Routes
@@ -40,9 +42,8 @@ app.get("/", async (req: Request, res: Response) => {
     prompt: "Write a vegetarian lasagna recipe for 4 people.",
   });
 
-  res.json({ message: "Form Management API is   wokring fine", text:text });
+  res.json({ message: "Form Management API is   wokring fine", text: text });
 });
-
 
 // Add a streaming endpoint
 app.get("/stream", async (req: Request, res: Response) => {
@@ -52,7 +53,7 @@ app.get("/stream", async (req: Request, res: Response) => {
   res.setHeader("Connection", "keep-alive");
 
   try {
-    const result =  streamText({
+    const result = streamText({
       model: deepseek("deepseek-chat"),
       prompt: "Write a vegetarian lasagna recipe for 4 people.",
     });

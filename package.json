@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "Conversational forms backend API",
   "main": "dist/index.js",
+  "_moduleAliases": {
+    "src": "dist"
+  },
   "scripts": {
     "build": "tsc",
-    "start": "node -r tsconfig-paths/register dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
-    "build:prod": "tsc && cp .env.production dist/.env",
+    "start": "node -r module-alias/register dist/index.js",
+    "dev:watch": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
+    "dev": "npm run build && node -r module-alias/register dist/index.js",
+    "dev:debug": "npm run build && NODE_ENV=dev node --inspect -r module-alias/register dist/index.js",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "npm run typeorm -- migration:generate -d src/config/data-source.ts src/migration/Migration",
     "migration:create": "npm run typeorm -- migration:create src/migration/Migration",
@@ -26,6 +30,7 @@
     "cors": "^2.8.5",
     "dotenv-safe": "^8.2.0",
     "express": "^4.21.2",
+    "module-alias": "^2.2.3",
     "pg": "^8.14.1",
     "typeorm": "^0.3.21",
     "uuid": "^9.0.1"

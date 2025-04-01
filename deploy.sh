@@ -41,8 +41,8 @@ echo "Restarting the application with PM2..."
 pm2 stop forms-api || true
 pm2 delete forms-api || true
 
-# Start a new instance
-pm2 start dist/index.js --node-args="-r tsconfig-paths/register" --name "forms-api"
+# Start a new instance - removed the tsconfig-paths/register since we now use module-alias
+pm2 start dist/index.js --name "forms-api"
 
 # Save PM2 configuration to persist across reboots
 echo "Saving PM2 process list..."
