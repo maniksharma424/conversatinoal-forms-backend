@@ -4,24 +4,13 @@
   "description": "Conversational forms backend API",
   "main": "dist/index.js",
   "type": "module",
-  "imports": {
-    "#/*": "./dist/*.js"
-  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
-    "dev:watch": "NODE_OPTIONS=\"--experimental-specifier-resolution=node\" ts-node-dev --respawn --transpile-only --esm src/index.ts",
+"dev:watch": "tsx watch src/index.ts",
     "dev": "npm run build && node --experimental-specifier-resolution=node dist/index.js",
-    "dev:debug": "npm run build && NODE_ENV=dev node --inspect --experimental-specifier-resolution=node dist/index.js",
     "typeorm": "ts-node --esm ./node_modules/typeorm/cli.js",
-    "migration:generate": "ts-node --esm ./node_modules/typeorm/cli.js migration:generate -d src/config/data-source.ts src/migration/Migration",
-    "migration:create": "ts-node --esm ./node_modules/typeorm/cli.js migration:create src/migration/Migration",
-    "migration:run": "ts-node --esm ./node_modules/typeorm/cli.js migration:run -d src/config/data-source.ts",
-    "migration:revert": "ts-node --esm ./node_modules/typeorm/cli.js migration:revert -d src/config/data-source.ts",
-    "seed": "ts-node --esm src/scripts/seed.ts",
-    "test": "echo \"No tests specified\"",
-    "test-connection": "ts-node --esm src/scripts/test-connection.ts",
-    "create-db": "ts-node --esm src/scripts/create-database.ts"
+    "test-connection": "ts-node --esm src/scripts/test-connection.ts"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^0.2.2",
@@ -53,7 +42,9 @@
     "glob": "^10.3.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.13",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
 }

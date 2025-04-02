@@ -7,6 +7,7 @@ import {
   OneToOne,
   JoinColumn,
   CreateDateColumn,
+  Relation,
 } from "typeorm";
 import { Form } from "./formEntity.js";
 
@@ -35,7 +36,7 @@ export class FormResponse {
 
   @ManyToOne(() => Form, (form) => form.responses)
   @JoinColumn({ name: "formId" })
-  form: Form;
+  form: Relation <Form>;
 
   @OneToMany(
     () => QuestionResponse,

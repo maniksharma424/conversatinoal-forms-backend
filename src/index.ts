@@ -1,14 +1,14 @@
-// to use absolute paths in build 
 
-
+import "reflect-metadata";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/data-source.js";
-import { ENV } from "./config/env.js";
+
 
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateText, streamText } from "ai";
 import formRoutes from "./routes/formRoutes.js";
+import { ENV } from "./config/env.js";
 
 // Initialize Express app
 const app = express();

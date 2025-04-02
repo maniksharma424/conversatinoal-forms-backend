@@ -5,6 +5,7 @@ import {
   OneToMany,
   OneToOne,
   CreateDateColumn,
+  Relation,
 } from "typeorm";
 import { FormResponse } from "./formResponseEntity.js";
 import { ConversationMessage } from "./conversationMessageEntity.js";
@@ -24,8 +25,8 @@ export class Conversation {
   status: string; // 'in_progress', 'completed', 'abandoned'
 
   @OneToOne(() => FormResponse, (formResponse) => formResponse.conversation)
-  formResponse: FormResponse;
+  formResponse: Relation<FormResponse>;
 
   @OneToMany(() => ConversationMessage, (message) => message.conversation)
-  messages: ConversationMessage[];
+  messages: Relation<ConversationMessage[]>;
 }

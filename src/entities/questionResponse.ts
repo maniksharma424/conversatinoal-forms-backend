@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Relation,
 } from "typeorm";
 import { Question } from "./questionEntity.js";
 import { FormResponse } from "./formResponseEntity.js";
@@ -35,5 +36,5 @@ export class QuestionResponse {
     { onDelete: "CASCADE" }
   )
   @JoinColumn({ name: "formResponseId" })
-  formResponse: FormResponse;
+  formResponse: Relation <FormResponse>;
 }
