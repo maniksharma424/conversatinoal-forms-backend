@@ -1,8 +1,8 @@
 // QuestionRepository.ts
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "../config/data-source";
-import { Question } from "../entities/questionEntity";
+import { AppDataSource } from "../config/data-source.js";
+import { Question } from "../entities/questionEntity.js";
 
 export class QuestionRepository {
   private repository: Repository<Question>;

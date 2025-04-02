@@ -1,8 +1,8 @@
 // UserRepository.ts
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "../config/data-source";
-import { User } from "../entities/userEntity";
+import { AppDataSource } from "../config/data-source.js";
+import { User } from "../entities/userEntity.js";
 
 export class UserRepository {
   private repository: Repository<User>;

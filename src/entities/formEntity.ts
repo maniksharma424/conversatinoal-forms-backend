@@ -9,9 +9,9 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-import { FormResponse } from "./formResponseEntity";
-import { User } from "./userEntity";
-import { Question } from "./questionEntity";
+import { FormResponse } from "./formResponseEntity.js";
+import { User } from "./userEntity.js";
+import { Question } from "./questionEntity.js";
 
 @Entity()
 export class Form {

@@ -1,8 +1,8 @@
 // ConversationMessageRepository.ts
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "../config/data-source";
-import { ConversationMessage } from "../entities/conversationMessageEntity";
+import { AppDataSource } from "../config/data-source.js";
+import { ConversationMessage } from "../entities/conversationMessageEntity.js";
 
 
 export class ConversationMessageRepository {

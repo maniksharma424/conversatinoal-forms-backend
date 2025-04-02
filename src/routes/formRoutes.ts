@@ -1,4 +1,4 @@
-import { getAllFormsController } from "@/controllers/formController";
+import { getAllFormsController } from "../controllers/formController.js";
 import { Router } from "express";
 
 

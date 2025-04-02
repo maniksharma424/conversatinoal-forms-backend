@@ -1,15 +1,14 @@
 // to use absolute paths in build 
-import "module-alias/register";
+
 
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { AppDataSource } from "./config/data-source";
-import { ENV } from "./config/env";
-import { User, Form, Question } from "./entities";
-import { FormResponse } from "./entities";
+import { AppDataSource } from "./config/data-source.js";
+import { ENV } from "./config/env.js";
+
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateText, streamText } from "ai";
-import formRoutes from "./routes/formRoutes";
+import formRoutes from "./routes/formRoutes.js";
 
 // Initialize Express app
 const app = express();
@@ -37,152 +36,152 @@ app.use("/api/v1", formRoutes);
 
 // Routes
 app.get("/", async (req: Request, res: Response) => {
-  const { text } = await generateText({
-    model: deepseek("deepseek-chat"),
-    prompt: "Write a vegetarian lasagna recipe for 4 people.",
-  });
+  // const { text } = await generateText({
+  //   model: deepseek("deepseek-chat"),
+  //   prompt: "Write a vegetarian lasagna recipe for 4 people.",
+  // });
 
-  res.json({ message: "Form Management API is   wokring fine", text: text });
+  res.json({ message: "Form Management API is   wokring fine" });
 });
 
-// Add a streaming endpoint
-app.get("/stream", async (req: Request, res: Response) => {
-  // Set headers for streaming
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
+// // Add a streaming endpoint
+// app.get("/stream", async (req: Request, res: Response) => {
+//   // Set headers for streaming
+//   res.setHeader("Content-Type", "text/event-stream");
+//   res.setHeader("Cache-Control", "no-cache");
+//   res.setHeader("Connection", "keep-alive");
 
-  try {
-    const result = streamText({
-      model: deepseek("deepseek-chat"),
-      prompt: "Write a vegetarian lasagna recipe for 4 people.",
-    });
+//   try {
+//     const result = streamText({
+//       model: deepseek("deepseek-chat"),
+//       prompt: "Write a vegetarian lasagna recipe for 4 people.",
+//     });
 
-    // Method 1: Using the helper function
-    // This automatically handles the streaming for you
-    result.pipeTextStreamToResponse(res);
+//     // Method 1: Using the helper function
+//     // This automatically handles the streaming for you
+//     result.pipeTextStreamToResponse(res);
 
-    // Method 2: Manual streaming (if you need more control)
-    /*
-    for await (const textPart of result.textStream) {
-      res.write(`data: ${JSON.stringify({ text: textPart })}\n\n`);
+//     // Method 2: Manual streaming (if you need more control)
+//     /*
+//     for await (const textPart of result.textStream) {
+//       res.write(`data: ${JSON.stringify({ text: textPart })}\n\n`);
       
-      // Optional: Force flush the response
-      if (res.flush) res.flush();
-    }
+//       // Optional: Force flush the response
+//       if (res.flush) res.flush();
+//     }
     
-    // End the response when done
-    res.write('data: [DONE]\n\n');
-    res.end();
-    */
-  } catch (error) {
-    console.error("Streaming error:", error);
-    res.write(
-      `data: ${JSON.stringify({
-        error: "An error occurred during streaming",
-      })}\n\n`
-    );
-    res.end();
-  }
-});
+//     // End the response when done
+//     res.write('data: [DONE]\n\n');
+//     res.end();
+//     */
+//   } catch (error) {
+//     console.error("Streaming error:", error);
+//     res.write(
+//       `data: ${JSON.stringify({
+//         error: "An error occurred during streaming",
+//       })}\n\n`
+//     );
+//     res.end();
+//   }
+// });
 
-// User routes
-app.get(
-  "/api/users",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userRepository = AppDataSource.getRepository(User);
-      const users = await userRepository.find({
-        select: [
-          "id",
-          "email",
-          "firstName",
-          "lastName",
-          "isVerified",
-          "createdAt",
-        ],
-      });
-      res.json({ success: true, data: users });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+// // User routes
+// app.get(
+//   "/api/users",
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const userRepository = AppDataSource.getRepository(User);
+//       const users = await userRepository.find({
+//         select: [
+//           "id",
+//           "email",
+//           "firstName",
+//           "lastName",
+//           "isVerified",
+//           "createdAt",
+//         ],
+//       });
+//       res.json({ success: true, data: users });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
 
-// Form routes
-app.get(
-  "/api/forms",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const formRepository = AppDataSource.getRepository(Form);
-      const forms = await formRepository.find({
-        relations: ["user"],
-      });
-      res.json({ success: true, data: forms });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+// // Form routes
+// app.get(
+//   "/api/forms",
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const formRepository = AppDataSource.getRepository(Form);
+//       const forms = await formRepository.find({
+//         relations: ["user"],
+//       });
+//       res.json({ success: true, data: forms });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
 
-app.get(
-  "/api/forms/:id",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const formRepository = AppDataSource.getRepository(Form);
-      const form = await formRepository.findOne({
-        where: { id: req.params.id },
-        relations: ["questions"],
-      });
+// app.get(
+//   "/api/forms/:id",
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const formRepository = AppDataSource.getRepository(Form);
+//       const form = await formRepository.findOne({
+//         where: { id: req.params.id },
+//         relations: ["questions"],
+//       });
 
-      if (!form) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Form not found" });
-      }
+//       if (!form) {
+//         return res
+//           .status(404)
+//           .json({ success: false, message: "Form not found" });
+//       }
 
-      res.json({ success: true, data: form });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+//       res.json({ success: true, data: form });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
 
-// Question routes
-app.get(
-  "/api/forms/:formId/questions",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const questionRepository = AppDataSource.getRepository(Question);
-      const questions = await questionRepository.find({
-        where: { formId: req.params.formId },
-        order: { order: "ASC" },
-      });
+// // Question routes
+// app.get(
+//   "/api/forms/:formId/questions",
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const questionRepository = AppDataSource.getRepository(Question);
+//       const questions = await questionRepository.find({
+//         where: { formId: req.params.formId },
+//         order: { order: "ASC" },
+//       });
 
-      res.json({ success: true, data: questions });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+//       res.json({ success: true, data: questions });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
 
-// Response routes
-app.get(
-  "/api/forms/:formId/responses",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const responseRepository = AppDataSource.getRepository(FormResponse);
-      const responses = await responseRepository.find({
-        where: { formId: req.params.formId },
-        order: { startedAt: "DESC" },
-      });
+// // Response routes
+// app.get(
+//   "/api/forms/:formId/responses",
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const responseRepository = AppDataSource.getRepository(FormResponse);
+//       const responses = await responseRepository.find({
+//         where: { formId: req.params.formId },
+//         order: { startedAt: "DESC" },
+//       });
 
-      res.json({ success: true, data: responses });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+//       res.json({ success: true, data: responses });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
 
 // Start server function
 async function startServer() {

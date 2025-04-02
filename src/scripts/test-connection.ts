@@ -1,5 +1,5 @@
 // src/scripts/test-connection.ts
-import { AppDataSource } from "../config/data-source";
+import { AppDataSource } from "../config/data-source.js";
 
 async function testConnection() {
   try {

@@ -8,10 +8,10 @@ import {
   JoinColumn,
   CreateDateColumn,
 } from "typeorm";
-import { Form } from "./formEntity";
+import { Form } from "./formEntity.js";
 
-import { Conversation } from "./conversationEntity";
-import { QuestionResponse } from "./questionResponse";
+import { Conversation } from "./conversationEntity.js";
+import { QuestionResponse } from "./questionResponse.js";
 
 @Entity()
 export class FormResponse {

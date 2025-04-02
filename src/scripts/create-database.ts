@@ -1,6 +1,6 @@
 // src/scripts/create-database.ts
 import { Client } from "pg";
-import { ENV } from "../config/env";
+import { ENV } from "../config/env.js";
 
 async function createDatabase() {
   // Connect to the default postgres database
