@@ -17,7 +17,7 @@ export class ConversationMessage {
   @Column({ type: "text" })
   content: string;
 
-  @Column()
+  @Column({ type: "varchar", length: 50 }) // Add explicit type
   role: string; // 'system', 'assistant', 'user'
 
   @CreateDateColumn()
@@ -33,5 +33,5 @@ export class ConversationMessage {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "conversationId" })
-  conversation: Relation <Conversation>;
+  conversation: Relation<Conversation>;
 }

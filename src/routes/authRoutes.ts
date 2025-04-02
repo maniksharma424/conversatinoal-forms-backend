@@ -1,37 +1,31 @@
-import express from "express";
-import passport from "passport";
+import { Router } from "express";
+import {
 
+  refreshAccessToken,
+  getUserProfile,
+  googleOAuthHandler,
+  googleOAuthCallbackHandler,
+} from "../controllers/authController.js";
 import { authenticate, requireVerified } from "../middleware/authMiddleware.js";
-import { User } from "../entities/userEntity.js";
-import { getUserProfile, googleCallback, refreshAccessToken } from "../controllers/authController.js";
 
-const router = express.Router();
+const authRoutes = Router();
 
-// Google OAuth routes
-router.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+// Initiate Google OAuth flow
+authRoutes.get("/oauth/google", googleOAuthHandler);
 
-router.get(
-  "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: "/login",
-  }),
-  googleCallback
-);
+// Google OAuth callback route
+authRoutes.get("/auth/google/callback", googleOAuthCallbackHandler);
 
 // Token refresh route
-router.post("/refresh-token", refreshAccessToken);
+authRoutes.post("/auth/refresh-token", refreshAccessToken);
 
 // Protected route to get user profile
-router.get("/profile", authenticate, getUserProfile);
+authRoutes.get("/auth/user", authenticate, getUserProfile);
 
-// Example of a route requiring verified email
-router.get("/protected", authenticate, requireVerified, (req, res) => {
-  const user = req.user as User;
+// Example of a route requiring a verified email
+authRoutes.get("/protected", authenticate, requireVerified, (req, res) => {
+  const user = req.user as any;
   res.json({ message: "This is a protected route", user: user?.email });
 });
 
-export default router;
+export default authRoutes;

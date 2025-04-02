@@ -1,5 +1,4 @@
 
-import "reflect-metadata";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/data-source.js";
@@ -9,6 +8,9 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateText, streamText } from "ai";
 import formRoutes from "./routes/formRoutes.js";
 import { ENV } from "./config/env.js";
+import authRoutes from "./routes/authRoutes.js";
+import { User } from "./entities/userEntity.js";
+
 
 // Initialize Express app
 const app = express();
@@ -17,6 +19,7 @@ const PORT = ENV.PORT || "3000";
 // Middleware
 app.use(cors());
 app.use(express.json());
+
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -31,6 +34,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 const deepseek = createDeepSeek({
   apiKey: process.env.DEEPSEEK_API_KEY ?? "",
 });
+
+app.use("/api/v1", authRoutes);
 
 app.use("/api/v1", formRoutes);
 
@@ -85,28 +90,28 @@ app.get("/", async (req: Request, res: Response) => {
 //   }
 // });
 
-// // User routes
-// app.get(
-//   "/api/users",
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const userRepository = AppDataSource.getRepository(User);
-//       const users = await userRepository.find({
-//         select: [
-//           "id",
-//           "email",
-//           "firstName",
-//           "lastName",
-//           "isVerified",
-//           "createdAt",
-//         ],
-//       });
-//       res.json({ success: true, data: users });
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
+// User routes
+app.get(
+  "/api/users",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userRepository = AppDataSource.getRepository(User);
+      const users = await userRepository.find({
+        select: [
+          "id",
+          "email",
+          "firstName",
+          "lastName",
+          "isVerified",
+          "createdAt",
+        ],
+      });
+      res.json({ success: true, data: users });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // // Form routes
 // app.get(
@@ -185,8 +190,10 @@ app.get("/", async (req: Request, res: Response) => {
 
 // Start server function
 async function startServer() {
+
   try {
     // Initialize TypeORM connection
+
     await AppDataSource.initialize();
     console.log("Database connection established");
 
@@ -199,6 +206,7 @@ async function startServer() {
     console.error("Error during application startup:", error);
     process.exit(1);
   }
+
 }
 
 // Handle unexpected errors
