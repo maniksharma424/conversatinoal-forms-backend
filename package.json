@@ -3,25 +3,14 @@
   "version": "1.0.0",
   "description": "Conversational forms backend API",
   "main": "dist/index.js",
-  "_moduleAliases": {
-    "@": "dist",
-    "src": "dist"
-  },
+  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node -r module-alias/register dist/index.js",
-    "dev:watch": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
-    "dev": "npm run build && node -r module-alias/register dist/index.js",
-    "dev:debug": "npm run build && NODE_ENV=dev node --inspect -r module-alias/register dist/index.js",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
-    "migration:generate": "npm run typeorm -- migration:generate -d src/config/data-source.ts src/migration/Migration",
-    "migration:create": "npm run typeorm -- migration:create src/migration/Migration",
-    "migration:run": "npm run typeorm -- migration:run -d src/config/data-source.ts",
-    "migration:revert": "npm run typeorm -- migration:revert -d src/config/data-source.ts",
-    "seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts",
-    "test": "echo \"No tests specified\"",
-    "test-connection": "ts-node -r tsconfig-paths/register src/scripts/test-connection.ts",
-    "create-db": "ts-node -r tsconfig-paths/register src/scripts/create-database.ts"
+    "build": "tsc && tsc-alias",
+    "start": "node --experimental-specifier-resolution=node dist/index.js",
+    "dev:watch": "concurrently \"tsc -w\" \"tsc-alias -w\" \"node --watch --experimental-specifier-resolution=node dist/index.js\"",
+    "dev": "npm run build && node --experimental-specifier-resolution=node dist/index.js",
+    "typeorm": "ts-node --esm ./node_modules/typeorm/cli.js",
+    "test-connection": "ts-node --esm src/scripts/test-connection.ts"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^0.2.2",
@@ -29,9 +18,12 @@
     "ai": "^4.2.8",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "dotenv-safe": "^8.2.0",
     "express": "^4.21.2",
-    "module-alias": "^2.2.3",
+    "express-session": "^1.18.1",
+    "google-auth-library": "^9.15.1",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.14.1",
     "typeorm": "^0.3.21",
     "uuid": "^9.0.1"
@@ -41,11 +33,16 @@
     "@types/cors": "^2.8.17",
     "@types/dotenv-safe": "^8.1.6",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.17.28",
     "@types/uuid": "^9.0.8",
+    "concurrently": "^9.1.2",
+    "glob": "^10.3.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.13",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
 }

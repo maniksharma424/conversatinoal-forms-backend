@@ -1,8 +1,8 @@
 // FormResponseRepository.ts
 import { IsNull, Not, Repository } from "typeorm";
 
-import { AppDataSource } from "../config/data-source";
-import { FormResponse } from "../entities/formResponseEntity";
+import { AppDataSource } from "../config/data-source.js";
+import { FormResponse } from "../entities/formResponseEntity.js";
 
 export class FormResponseRepository {
   private repository: Repository<FormResponse>;

@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from "typeorm";
-import { Form } from "./formEntity";
+import { Form } from "./formEntity.js";
 
 @Entity()
 export class User {

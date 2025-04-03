@@ -1,8 +1,8 @@
 // FormRepository.ts
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "../config/data-source";
-import { Form } from "../entities/formEntity";
+import { AppDataSource } from "../config/data-source.js";
+import { Form } from "../entities/formEntity.js";
 
 export class FormRepository {
   private repository: Repository<Form>;

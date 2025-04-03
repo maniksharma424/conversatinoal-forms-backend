@@ -4,8 +4,9 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Relation,
 } from "typeorm";
-import { Form } from "./formEntity";
+import { Form } from "./formEntity.js";
 
 @Entity()
 export class Question {
@@ -42,5 +43,5 @@ export class Question {
 
   @ManyToOne(() => Form, (form) => form.questions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "formId" })
-  form: Form;
+  form: Relation <Form>;
 }

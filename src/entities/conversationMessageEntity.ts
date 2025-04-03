@@ -5,8 +5,9 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  Relation,
 } from "typeorm";
-import { Conversation } from "./conversationEntity";
+import { Conversation } from "./conversationEntity.js";
 
 @Entity()
 export class ConversationMessage {
@@ -16,7 +17,7 @@ export class ConversationMessage {
   @Column({ type: "text" })
   content: string;
 
-  @Column()
+  @Column({ type: "varchar", length: 50 }) // Add explicit type
   role: string; // 'system', 'assistant', 'user'
 
   @CreateDateColumn()
@@ -32,5 +33,5 @@ export class ConversationMessage {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "conversationId" })
-  conversation: Conversation;
+  conversation: Relation<Conversation>;
 }

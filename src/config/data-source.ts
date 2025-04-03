@@ -7,8 +7,8 @@ import {
   QuestionResponse,
   Conversation,
   ConversationMessage,
-} from "../entities/index";
-import { ENV } from "./env";
+} from "../entities/index.js";
+import { ENV } from "./env.js";
 
 export const AppDataSource = new DataSource({
   type: "postgres",

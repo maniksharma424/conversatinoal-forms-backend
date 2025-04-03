@@ -1,8 +1,8 @@
 // Export all entities
-export { User } from "./userEntity";
-export { Form } from "./formEntity";
-export { Question } from "./questionEntity";
-export { FormResponse } from "./formResponseEntity";
-export { QuestionResponse } from "./questionResponse";
-export { Conversation } from "./conversationEntity";
-export { ConversationMessage } from "./conversationMessageEntity";
+export { User } from "./userEntity.js";
+export { Form } from "./formEntity.js";
+export { Question } from "./questionEntity.js";
+export { FormResponse } from "./formResponseEntity.js";
+export { QuestionResponse } from "./questionResponse.js";
+export { Conversation } from "./conversationEntity.js";
+export { ConversationMessage } from "./conversationMessageEntity.js";

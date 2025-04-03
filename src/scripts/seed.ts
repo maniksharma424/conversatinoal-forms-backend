@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import * as bcrypt from "bcrypt";
-import { AppDataSource } from "../config/data-source";
-import { User, Form, Question } from "../entities/index";
+import { AppDataSource } from "../config/data-source.js";
+import { User, Form, Question } from "../entities/index.js";
 
 async function seedDatabase() {
   console.log("Starting database seeding...");
