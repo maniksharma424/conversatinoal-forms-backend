@@ -22,9 +22,7 @@ export class Question {
   @Column({ type: "jsonb", nullable: true })
   validationRules: {
     required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
+    maxRetries?:number;
     options?: string[]; // For multiple-choice questions
   };
 
