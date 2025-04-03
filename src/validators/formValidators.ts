@@ -1,4 +1,5 @@
 // src/validators/formValidator.ts
+import { FORM_TONES } from "@/constants/constants.js";
 import { FormCreate, FormUpdate } from "@/services/formService.js";
 import { z } from "zod";
 
@@ -25,8 +26,7 @@ const formCreateSchema = z.object({
     .default("neutral"),
 });
 
-// Create a constant for available tones
-export const FORM_TONES = ["friendly", "formal", "casual", "neutral"] as const;
+
 
 // Create a type from the constant
 export type FormTone = typeof FORM_TONES[number];
