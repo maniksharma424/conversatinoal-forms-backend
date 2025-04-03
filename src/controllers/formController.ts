@@ -1,26 +1,249 @@
-
-
-
-
-
-
+// src/controllers/formController.ts
 import { NextFunction, Request, Response } from "express";
-import { AppDataSource } from "@/config/data-source.js";
-import { Form } from "@/entities/formEntity.js";
+import { FormService } from "../services/formService.js";
+import {
+  validateFormCreate,
+  validateFormUpdate,
+} from "@/validators/formValidators.js";
 
+const formService = new FormService();
 
-
+// Get all forms for the current user
 export const getAllFormsController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const formRepository = AppDataSource.getRepository(Form);
-    const forms = await formRepository.find({
-      relations: ["user"],
+    // The user ID should be added by the authentication middleware
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
+    }
+
+    const forms = await formService.getAllForms(userId);
+    return res.json({ success: true, data: forms });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Create a new form
+export const createFormController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
+    }
+
+    // Validate form data
+    const validationResult = validateFormCreate(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationResult.errors,
+      });
+    }
+
+    const newForm = await formService.createFormFromPrompt(req.body, userId);
+    return res.status(201).json({ success: true, data: newForm });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get a specific form by ID
+export const getFormByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.id;
+    const form = await formService.getFormById(formId);
+
+    if (!form) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    // Verify the form belongs to the current user
+    if (form.userId !== req.user?.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to access this form",
+      });
+    }
+
+    return res.json({ success: true, data: form });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update a form
+export const updateFormController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.id;
+    const userId = req.user?.id;
+
+    // Verify the form exists and belongs to the user
+    const existingForm = await formService.getFormById(formId);
+
+    if (!existingForm) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    if (existingForm.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this form",
+      });
+    }
+
+    // Validate form update data
+    const validationResult = validateFormUpdate(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "can not update Unrecognized fields",
+      });
+    }
+
+    const updatedForm = await formService.updateForm(formId, req.body);
+    return res.json({ success: true, data: updatedForm });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Delete a form
+export const deleteFormController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.id;
+    const userId = req.user?.id;
+
+    // Verify the form exists and belongs to the user
+    const existingForm = await formService.getFormById(formId);
+
+    if (!existingForm) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    if (existingForm.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this form",
+      });
+    }
+
+    const deleted = await formService.deleteForm(formId);
+
+    if (!deleted) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to delete form" });
+    }
+
+    return res.json({ success: true, message: "Form deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Publish a form
+export const publishFormController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.id;
+    const userId = req.user?.id;
+
+    // Verify the form exists and belongs to the user
+    const existingForm = await formService.getFormById(formId);
+
+    if (!existingForm) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    if (existingForm.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to publish this form",
+      });
+    }
+
+    const publishedForm = await formService.publishForm(formId);
+    return res.json({
+      success: true,
+      data: publishedForm,
+      message: "Form published successfully",
     });
-    res.json({ success: true, data: forms });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Unpublish a form
+export const unpublishFormController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.id;
+    const userId = req.user?.id;
+
+    // Verify the form exists and belongs to the user
+    const existingForm = await formService.getFormById(formId);
+
+    if (!existingForm) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    if (existingForm.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to unpublish this form",
+      });
+    }
+
+    const unpublishedForm = await formService.unpublishForm(formId);
+    return res.json({
+      success: true,
+      data: unpublishedForm,
+      message: "Form unpublished successfully",
+    });
   } catch (error) {
     next(error);
   }
