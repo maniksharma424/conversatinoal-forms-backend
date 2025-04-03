@@ -15,5 +15,10 @@ declare global {
       updatedAt: Date;
       forms: Form[];
     }
+
+    // Add this interface to extend the Request type
+    interface Request {
+      user?: User;
+    }
   }
 }
