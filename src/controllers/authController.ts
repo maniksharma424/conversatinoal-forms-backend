@@ -4,7 +4,6 @@ import { ENV } from "../config/env.js";
 import authService from "../services/authService.js";
 import { UserRepository } from "../repository/userRepository.js";
 
-
 // Initialize OAuth2Client with your credentials and redirect URL
 const client = new OAuth2Client(
   ENV.GOOGLE_CLIENT_ID,
