@@ -25,7 +25,7 @@ interface TokenPayload {
     };
 
     return jwt.sign(payload, ENV.JWT_SECRET, {
-      // expiresIn: "7d",
+      expiresIn: "30d",
     });
   }
 
@@ -35,7 +35,7 @@ interface TokenPayload {
     };
 
     return jwt.sign(payload, ENV.REFRESH_JWT_SECRET, {
-      // expiresIn: "30d",
+      expiresIn: "30d",
     });
   }
 
