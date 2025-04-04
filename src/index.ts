@@ -7,11 +7,11 @@ import { ENV } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 
 import userRoutes from "./routes/userRoutes.js";
+import questionRoutes from "./routes/questionRoutes.js";
 
 // Initialize Express app
 const app = express();
 const PORT = ENV.PORT || "3000";
-
 
 // Middleware
 app.use(cors());
@@ -37,6 +37,9 @@ app.use("/api/v1", userRoutes);
 
 // form routes
 app.use("/api/v1", formRoutes);
+
+// question routes
+app.use("/api/v1", questionRoutes);
 
 // Health check route
 app.get("/", async (req: Request, res: Response) => {

@@ -10,7 +10,7 @@ export interface QuestionCreateDTO {
   validationRules?: {
     required?: boolean;
     maxRetries?: number;
-    options?: string[];
+    options?: string[] | null;
   };
   metadata?: {
     description?: string;
@@ -26,7 +26,7 @@ export interface QuestionUpdateDTO {
   validationRules?: {
     required?: boolean;
     maxRetries?: number;
-    options?: string[];
+    options?: string[] | null;
   };
   metadata?: {
     description?: string;
@@ -93,13 +93,21 @@ export class QuestionService {
 
       // Validate options for multiple choice questions
       if (
-        questionData.type === "multiplechoice" &&
+        questionData.type?.toLowerCase() === "multiplechoice" &&
         (!questionData.validationRules?.options ||
-          questionData.validationRules.options.length === 0)
+          questionData.validationRules.options.length <= 1)
       ) {
-        throw new Error("Multiple choice questions require options");
+        throw new Error(
+          "Multiple choice questions require more than 1 options"
+        );
       }
+      if (!questionData.order) {
+        const totalQuestionsPresent = form.questions?.length;
+        // question orders are 0 index based
+        // update the order of question being added as the last
 
+        questionData.order = totalQuestionsPresent;
+      }
       const newQuestion = {
         ...questionData,
         form,
@@ -187,12 +195,24 @@ export class QuestionService {
 
       // Validate options for multiple choice questions if type is being updated
       if (
-        questionData.type === "multiplechoice" &&
+        questionData.type?.toLowerCase() === "multiplechoice" &&
         questionData.validationRules &&
         (!questionData.validationRules.options ||
-          questionData.validationRules.options.length === 0)
+          questionData.validationRules.options.length <= 1)
       ) {
-        throw new Error("Multiple choice questions require options");
+        throw new Error(
+          "Multiple choice questions require more than 1 options"
+        );
+      }
+      // update the options to null if user changes question type to text
+      if (
+        questionData.type?.toLowerCase() === "text" &&
+        existingQuestion.type?.toLowerCase() === "multiplechoice"
+      ) {
+        questionData.validationRules = {
+          ...existingQuestion.validationRules,
+          options: null,
+        };
       }
 
       return await this.questionRepository.update(id, questionData);
@@ -208,17 +228,31 @@ export class QuestionService {
 
   async deleteQuestion(id: string): Promise<boolean> {
     try {
-      if (!id) {
-        throw new Error("Question ID is required");
+      // Get the question to find its form
+      const question = await this.getQuestionById(id);
+      if (!question) return false;
+
+      const formId = question.formId;
+
+      // Delete the question
+      const deleted = await this.questionRepository.delete(id);
+      if (!deleted) return false;
+
+      // Get remaining questions for the form
+      const remainingQuestions = await this.getQuestionsByForm(formId);
+
+      // Sort the questions by their current order to ensure correct reordering
+      remainingQuestions.sort((a, b) => a.order - b.order);
+
+      // Create an array of IDs of the remaining questions in sorted order
+      const remainingQuestionIds = remainingQuestions.map((q) => q.id);
+
+      // If there are remaining questions, reorder them to fix any gaps
+      if (remainingQuestionIds.length > 0) {
+        await this.questionRepository.reorder(formId, remainingQuestionIds);
       }
 
-      // Verify the question exists before deleting
-      const existingQuestion = await this.questionRepository.findById(id);
-      if (!existingQuestion) {
-        return false;
-      }
-
-      return await this.questionRepository.delete(id);
+      return true;
     } catch (error) {
       console.error("Error deleting question:", error);
       throw new Error(
