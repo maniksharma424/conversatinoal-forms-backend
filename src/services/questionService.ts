@@ -2,6 +2,12 @@
 import { Question } from "../entities/questionEntity.js";
 import { Form } from "../entities/formEntity.js";
 import { QuestionRepository } from "@/repository/questionRepository.js";
+import {
+  SUGGEST_QUESTION_PROMPT,
+  generateSuggestQuestionPrompt,
+} from "@/utils/prompts.js";
+import { AIService } from "./aiService.js";
+import { FormService } from "./formService.js";
 
 export interface QuestionCreateDTO {
   text: string;
@@ -118,6 +124,77 @@ export class QuestionService {
       console.error("Error creating question:", error);
       throw new Error(
         `Failed to create question: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  // Add this method to your QuestionService class
+  async suggestQuestion(formId: string): Promise<QuestionCreateDTO> {
+    try {
+      // Initialize the AI service
+      const aiService = new AIService();
+      const formService = new FormService();
+
+      // Get the form and existing questions
+      const form = await formService.getFormById(formId);
+      if (!form) {
+        throw new Error("Form not found");
+      }
+
+      const existingQuestions = await this.getQuestionsByForm(formId);
+
+      // Create a prompt that includes context about the form and existing questions
+      const prompt = generateSuggestQuestionPrompt(form, existingQuestions);
+
+      // Generate the question using AI
+      const { response } = await aiService.generateText({
+        prompt,
+        systemPrompt: SUGGEST_QUESTION_PROMPT,
+        temperature: 0.7,
+        maxTokens: 1000,
+        format: "json",
+      });
+
+      // Parse the AI-generated question
+      let questionData;
+      try {
+        // Clean up the response if needed (remove markdown code blocks)
+        let cleanedResponse = response.trim();
+
+        if (cleanedResponse.startsWith("```json")) {
+          cleanedResponse = cleanedResponse.substring(7);
+        } else if (cleanedResponse.startsWith("```")) {
+          cleanedResponse = cleanedResponse.substring(3);
+        }
+
+        if (cleanedResponse.endsWith("```")) {
+          cleanedResponse = cleanedResponse.substring(
+            0,
+            cleanedResponse.length - 3
+          );
+        }
+
+        cleanedResponse = cleanedResponse.trim();
+
+        questionData = JSON.parse(cleanedResponse);
+      } catch (parseError) {
+        console.error("Error parsing AI response as JSON:", parseError);
+        console.log("Raw AI response:", response);
+        throw new Error("Generated question data is not valid JSON");
+      }
+
+      // Assign a default order if not provided
+      if (questionData.order === undefined) {
+        questionData.order = existingQuestions.length;
+      }
+
+      return questionData;
+    } catch (error) {
+      console.error("Error suggesting question:", error);
+      throw new Error(
+        `Failed to suggest question: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );

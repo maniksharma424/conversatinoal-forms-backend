@@ -4,9 +4,10 @@ import { authenticate } from "../middleware/authMiddleware.js";
 import {
   getQuestionsController,
   createQuestionController,
-  updateQuestionController,
+updateQuestionController,
   deleteQuestionController,
   reorderQuestionsController,
+  suggestQuestionController,
 } from "../controllers/questionController.js";
 
 const questionRoutes = Router();
@@ -21,10 +22,10 @@ questionRoutes.get("/form/:formId/questions", getQuestionsController);
 questionRoutes.post("/form/:formId/question", createQuestionController);
 
 // suggest question from AI by giving context of form and rest of the question after suggestion use create or update question api 
-// questionRoutes.post(
-//   "/form/:formId/question/generate",
-//   createQuestionController
-// );
+questionRoutes.post(
+  "/form/:formId/question/suggest",
+  suggestQuestionController
+);
 
 questionRoutes.put("/form/:formId/question/:id", updateQuestionController);
 

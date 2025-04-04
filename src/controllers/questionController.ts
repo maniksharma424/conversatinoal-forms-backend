@@ -90,6 +90,53 @@ export const createQuestionController = async (
 };
 
 
+export const suggestQuestionController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.formId;
+    const userId = req.user?.id;
+
+    // Verify the form exists and user has access
+    const form = await formService.getFormById(formId);
+    if (!form) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    if (form.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to access this form",
+      });
+    }
+
+    // Call the service to generate a suggested question
+    const suggestedQuestion = await questionService.suggestQuestion(formId);
+
+    // Return the suggested question data without creating it yet
+    // The client can then choose to create it with the regular create endpoint
+    return res.json({
+      success: true,
+      message: "Generated a suggested question",
+      data: suggestedQuestion,
+    });
+  } catch (error) {
+    console.error("Error suggesting question:", error);
+
+    if (error instanceof Error) {
+      return res.status(500).json({
+        success: false,
+        message: `Failed to suggest question: ${error.message}`,
+      });
+    }
+
+    next(error);
+  }
+};
 
 export const updateQuestionController = async (
   req: Request,
