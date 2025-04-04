@@ -17,13 +17,13 @@ export class Question {
   text: string;
 
   @Column({ default: "text" })
-  type: string; // 'text', 'multiplechoice', 'number', 'email', etc.
+  type: string; // 'text', 'multiplechoice', '
 
   @Column({ type: "jsonb", nullable: true })
   validationRules: {
     required?: boolean;
     maxRetries?:number;
-    options?: string[]; // For multiple-choice questions
+    options?: string[]  | null; // For multiple-choice questions
   };
 
   @Column({ default: 0 })
