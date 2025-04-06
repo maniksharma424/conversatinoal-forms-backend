@@ -14,6 +14,7 @@ import { RedisService } from "./redisService.js";
 import { generateChatPrompt } from "@/utils/prompts.js";
 import { Conversation } from "@/entities/conversationEntity.js";
 import { FormResponse } from "@/entities/formResponseEntity.js";
+import { AppDataSource } from "@/config/data-source.js";
 
 export interface RespondDTO {
   response: string;
@@ -36,10 +37,6 @@ export class ConversationService {
   private aiService: AIService;
   private redisService: RedisService;
 
-  // Pre-create tools for reuse
-  private saveMessageTool;
-  private saveQuestionResponseTool;
-
   constructor() {
     this.formRepository = new FormRepository();
     this.conversationRepository = new ConversationRepository();
@@ -51,144 +48,6 @@ export class ConversationService {
 
     // Initialize tools once during service creation
     const tools = this.createConversationTools();
-    this.saveMessageTool = tools.saveMessageTool;
-    this.saveQuestionResponseTool = tools.saveQuestionResponseTool;
-  }
-
-  private createConversationTools() {
-    // Tool 1: Save Message Tool
-    const saveMessageTool = tool({
-      description:
-        "Save the assistant's message in the conversation history after LLM processing",
-      parameters: z.object({
-        conversationId: z.string().describe("ID of the conversation"),
-        content: z.string().describe("The message content to save"),
-        role: z
-          .string()
-          .default("assistant")
-          .describe("Role of the message sender"),
-      }),
-      execute: async ({ conversationId, content, role = "assistant" }) => {
-        try {
-          // Create message in database
-          const message = await this.conversationMessageRepository.create({
-            content,
-            role,
-            conversationId: conversationId,
-          });
-
-          // Update the message cache
-          await this.redisService.addMessageToCache(conversationId, message);
-
-          return {
-            success: true,
-            messageId: message.id,
-            message: "Message saved successfully",
-          };
-        } catch (error) {
-          console.error("Error saving message:", error);
-          return {
-            success: false,
-            error:
-              error instanceof Error ? error.message : "Failed to save message",
-          };
-        }
-      },
-    });
-
-    // Tool 2: Save Question Response Tool
-    const saveQuestionResponseTool = tool({
-      description:
-        "Save the user's validated response to a specific question if you are retrying do not save",
-      parameters: z.object({
-        formResponseId: z.string().describe("ID of the form response"),
-        questionId: z.string().describe("ID of the question being answered"),
-        response: z.string().describe("The user's response text"),
-        isValid: z
-          .boolean()
-          .describe("Whether the response meets validation requirements"),
-        validationMessage: z
-          .string()
-          .optional()
-          .describe("Message explaining why validation failed"),
-      }),
-      execute: async ({
-        formResponseId,
-        questionId,
-        response,
-        isValid,
-        validationMessage,
-      }) => {
-        try {
-          if (!isValid) {
-            return {
-              success: true,
-              validated: false,
-              message: "Response not saved as it did not pass validation",
-              validationMessage,
-            };
-          }
-
-          // Create new response
-          const questionResponse = await this.questionResponseRepository.create(
-            {
-              questionId,
-              formResponseId,
-              response,
-            }
-          );
-
-          return {
-            success: true,
-            validated: true,
-            message: "Question response saved successfully",
-            responseId: questionResponse.id,
-          };
-        } catch (error) {
-          console.error("Error saving question response:", error);
-          return {
-            success: false,
-            error:
-              error instanceof Error
-                ? error.message
-                : "Failed to save question response",
-          };
-        }
-      },
-    });
-
-    return { saveMessageTool, saveQuestionResponseTool };
-  }
-
-  private async getFormWithCache(formId: string) {
-    // Check cache first
-    // const cachedForm = await this.redisService.getCachedForm(formId);
-
-    // if (cachedForm) {
-    //   return JSON.parse(cachedForm);
-    // }
-
-    // Fetch form with questions in one query
-    const form = await this.formRepository.findById(formId);
-
-    if (!form) {
-      throw new Error("Form not found");
-    }
-
-    // Cache the form
-    // await this.redisService.cacheForm(formId, form);
-
-    return form;
-  }
-
-  private setupSSEHeaders(res: Response): void {
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-  }
-
-  private sendSSEEvent(res: Response, event: string, data: any): void {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   }
 
   async chat({
@@ -301,14 +160,14 @@ export class ConversationService {
       const stream = this.aiService.generateStreamText({
         prompt: chatPrompt,
         systemPrompt:
-          "You are a helpful, conversational assistant guiding users through the",
+          "You are a helpful, conversational assistant guiding users through the form",
         temperature: 0.7,
-        // maxSteps: 2, // Allow tool calling after response generation
-        // tools: {
-        //   saveMessageTool: this.saveMessageTool,
-        //   saveQuestionResponseTool: this.saveQuestionResponseTool,
-        // },
-        // toolChoice: "auto",
+        maxSteps: 2, // Allow one tool call plus a final response
+        tools: {
+          completeForm: this.createConversationTools().formCompletionTool,
+        },
+        toolChoice: "auto", // Let the model decide when to call the tool
+
         onChunk: (chunk) => {
           if (chunk.type === "text-delta") {
             fullMessage += chunk.textDelta;
@@ -369,5 +228,181 @@ export class ConversationService {
 
       res.end();
     }
+  }
+
+  private async getFormWithCache(formId: string) {
+    // Check cache first
+    // const cachedForm = await this.redisService.getCachedForm(formId);
+
+    // if (cachedForm) {
+    //   return JSON.parse(cachedForm);
+    // }
+
+    // Fetch form with questions in one query
+    const form = await this.formRepository.findById(formId);
+
+    if (!form) {
+      throw new Error("Form not found");
+    }
+
+    // Cache the form
+    // await this.redisService.cacheForm(formId, form);
+
+    return form;
+  }
+
+  private setupSSEHeaders(res: Response): void {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+  }
+
+  private sendSSEEvent(res: Response, event: string, data: any): void {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  }
+  private createConversationTools() {
+    // Tool 2: Save Question Response Tool
+    const saveQuestionResponseTool = tool({
+      description:
+        "Save the user's validated response to a specific question if you are retrying do not save",
+      parameters: z.object({
+        formResponseId: z.string().describe("ID of the form response"),
+        questionId: z.string().describe("ID of the question being answered"),
+        response: z.string().describe("The user's response text"),
+        isValid: z
+          .boolean()
+          .describe("Whether the response meets validation requirements"),
+        validationMessage: z
+          .string()
+          .optional()
+          .describe("Message explaining why validation failed"),
+      }),
+      execute: async ({
+        formResponseId,
+        questionId,
+        response,
+        isValid,
+        validationMessage,
+      }) => {
+        try {
+          if (!isValid) {
+            return {
+              success: true,
+              validated: false,
+              message: "Response not saved as it did not pass validation",
+              validationMessage,
+            };
+          }
+
+          // Create new response
+          const questionResponse = await this.questionResponseRepository.create(
+            {
+              questionId,
+              formResponseId,
+              response,
+            }
+          );
+
+          return {
+            success: true,
+            validated: true,
+            message: "Question response saved successfully",
+            responseId: questionResponse.id,
+          };
+        } catch (error) {
+          console.error("Error saving question response:", error);
+          return {
+            success: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to save question response",
+          };
+        }
+      },
+    });
+
+    const formCompletionTool = tool({
+      description:
+        "Mark a form as completed when the user has answered the last questions satisfactorily",
+      parameters: z.object({
+        conversationId: z
+          .string()
+          .describe("ID of the conversation to mark as completed"),
+        isValid: z.boolean().describe("Whether the final answer was valid"),
+      }),
+      execute: async ({ conversationId, isValid }) => {
+        if (!isValid) {
+          return {
+            success: false,
+            message: "Cannot complete form with invalid answer",
+          };
+        }
+
+        try {
+          // Use a transaction to ensure both updates succeed or fail together
+          return await AppDataSource.transaction(
+            async (transactionalEntityManager) => {
+              // Get the conversation with its associated form response
+              const conversation = await this.conversationRepository.findById(
+                conversationId
+              );
+
+              if (!conversation) {
+                return {
+                  success: false,
+                  message: "Conversation not found",
+                };
+              }
+
+              if (conversation.status === "completed") {
+                return {
+                  success: true,
+                  message: "Form was already marked as completed",
+                };
+              }
+
+              // Update conversation status
+              conversation.status = "completed";
+              conversation.endedAt = new Date();
+
+              // Update form response completedAt
+              if (conversation.formResponse) {
+                conversation.formResponse.completedAt = new Date();
+
+                // Save the form response first
+                await transactionalEntityManager.save(
+                  conversation.formResponse
+                );
+              } else {
+                return {
+                  success: false,
+                  message: "Form response not found for this conversation",
+                };
+              }
+
+              // Save the conversation
+              await transactionalEntityManager.save(conversation);
+
+              return {
+                success: true,
+                message: "Form completed successfully",
+                completedAt: conversation.formResponse.completedAt,
+              };
+            }
+          );
+        } catch (error) {
+          console.error("Error completing form:", error);
+          return {
+            success: false,
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to complete form",
+          };
+        }
+      },
+    });
+    return { saveQuestionResponseTool, formCompletionTool };
   }
 }

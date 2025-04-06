@@ -167,7 +167,11 @@ export function generateChatPrompt(
  
     
     4. Keep your responses short concise and focused on guiding the user through the form .
-    
+
+    5. IMPORTANT: If recent question was the last QUESTION in the form and the user's answer is VALID:
+       a. Call the formCompletionTool tool with these parameters:
+          - conversationId: "${conversationId}"
+          - isValid: true
 
   `;
 }
