@@ -133,16 +133,3 @@ export const chatController = async (
     });
   }
 };
-
-// okay here's the approach we are following for our conversations
-// 1. two routes -  GET (/startconversation/formID) - POST /chat
-// 2. start conversation will create a new form response , new conversation and returns id's for both along with first question
-// 3. start conversation will also store form details and conversation messages in redis cache
-// 4. user responds to / chat with question + answer add user message to conversation message DB
-// 5. / chat will get the form details  + conversation messages from redis cache makes a system prompt from them and send to LLM along with user's answer for th question (promp should convey LLM to respond with next question or if not valudated retry with same question in a natural way) also we need to send LLM tools (save message , save question response)
-// 6. LLM responds with message stream message to user once stream is done LLM will call our tools
-// 7. save message tool saves message in conversaationMessage DB and updates cpnversation cache
-// 8. save question response tool only save user response which was fed to LLM in the question Response db if it was validated and we hjave moved to next question
-// 9. if user has answered last question properly then along with LLM response it send a key which tells frontend that form is submitted
-
-// based on this design controller  , route and service
