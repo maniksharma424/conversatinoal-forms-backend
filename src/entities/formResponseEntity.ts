@@ -14,6 +14,7 @@ import { Form } from "./formEntity.js";
 import { Conversation } from "./conversationEntity.js";
 import { QuestionResponse } from "./questionResponse.js";
 
+// In FormResponse entity (form-response.entity.ts)
 @Entity()
 export class FormResponse {
   @PrimaryGeneratedColumn("uuid")
@@ -36,7 +37,7 @@ export class FormResponse {
 
   @ManyToOne(() => Form, (form) => form.responses)
   @JoinColumn({ name: "formId" })
-  form: Relation <Form>;
+  form: Relation<Form>;
 
   @OneToMany(
     () => QuestionResponse,
@@ -44,10 +45,6 @@ export class FormResponse {
   )
   questionResponses: QuestionResponse[];
 
-  @Column({ nullable: true })
-  conversationId: string;
-
   @OneToOne(() => Conversation, (conversation) => conversation.formResponse)
-  @JoinColumn({ name: "conversationId" })
-  conversation: Conversation;
+  conversation: Relation<Conversation>;
 }

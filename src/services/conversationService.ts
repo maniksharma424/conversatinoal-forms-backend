@@ -13,6 +13,7 @@ import { QuestionResponseRepository } from "@/repository/questionResponseReposit
 import { RedisService } from "./redisService.js";
 import { generateChatPrompt } from "@/utils/prompts.js";
 import { Conversation } from "@/entities/conversationEntity.js";
+import { FormResponse } from "@/entities/formResponseEntity.js";
 
 export interface RespondDTO {
   response: string;
@@ -213,17 +214,16 @@ export class ConversationService {
 
       // CASE 1: Starting a new conversation (no conversationId provided)
       if (!conversationId) {
-        // Create form response and conversation in one transaction
-        const formResponse = await this.formResponseRepository.create({
-          formId: form.id,
-        });
-        console.log("created form response for new conversation", formResponse);
+        const formResponse = new FormResponse();
+        formResponse.formId = form.id;
 
+        // Save the conversation (which will also save the form response with cascade)
         conversation = await this.conversationRepository.create({
           status: "in_progress",
           formResponse,
         });
 
+        console.log("creating new form response ", formResponse);
         console.log(
           "creating conversation for new form response ",
           conversation
