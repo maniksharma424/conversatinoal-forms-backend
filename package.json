@@ -15,8 +15,7 @@
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
     "prebuild": "npm run type-check",
-    "prepare": "husky install",
-    "migration:run": "NODE_OPTIONS=\"--loader ts-node/esm\" ts-node --esm ./node_modules/typeorm/cli.js migration:run -d src/config/data-source.ts"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^0.2.2",

@@ -109,7 +109,12 @@ export const chatController = async (
     const formId = req.params.formId;
     const { question, answer, conversationId } = req.body;
 
-    // Validate request body
+    // Validate req params
+    if (!formId) {
+      return res
+        .status(404)
+        .json({ success: false, message: "FormId is required" });
+    }
 
     await conversationService.chat({
       formId: formId,
@@ -120,6 +125,7 @@ export const chatController = async (
     });
   } catch (error) {
     console.error("Error starting conversation:", error);
+    next(error);
     return res.status(500).json({
       success: false,
       message:
