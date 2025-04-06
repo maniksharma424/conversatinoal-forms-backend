@@ -1,3 +1,4 @@
+import { ConversationMessage } from "@/entities/conversationMessageEntity.js";
 import { Form } from "@/entities/formEntity.js";
 import { Question } from "@/entities/questionEntity.js";
 
@@ -90,3 +91,88 @@ export const generateSuggestQuestionPrompt = (
           Based on this form, suggest a new question that would complement the existing ones and help gather additional useful information.
               `;
 };
+
+/**
+ * Generates a comprehensive system prompt for the conversation assistant
+ * Handles both new conversations and continuing conversations
+ */
+export function generateChatPrompt(
+  conversationId: string,
+  form: Form,
+  recentQuestion: string,
+  conversationMessages?: ConversationMessage[],
+  userResponse?: string
+) {
+  // Determine if this is the first question
+
+  console.log(
+    "Message history",
+    conversationMessages,
+    "userResponse --",
+    userResponse,
+    "cenet question asked --",
+    recentQuestion
+  );
+  const isFirstQuestion =
+    !conversationMessages || conversationMessages.length === 0;
+
+  return `
+    You are a helpful, conversational assistant guiding users through the "${
+      form.title
+    }" form.
+    
+    ## FORM DETAILS
+    ${JSON.stringify(form, null, 2)}
+
+
+    ## CONVERSATION STATE
+    ${
+      isFirstQuestion
+        ? "This is the START of a new conversation. Introduce yourself briefly and ask the first question (based on 'question's order')."
+        : "This is a CONTINUING conversation. Review the conversation history , recent assistant question , user latest response to determine the current question from the from , evaluate the user's response, and proceed accordingly."
+    }
+
+    ${
+      recentQuestion
+        ? ` "User has responded to this recent question by the assistant : ${recentQuestion}"`
+        : ""
+    }
+
+    ${userResponse ? `User's latest response: "${userResponse}"` : ""}
+    
+    
+    ${
+      conversationMessages?.length
+        ? `
+        ## CONVERSATION HISTORY
+
+        ${JSON.stringify(conversationMessages, null, 2)}`
+        : "No previous messages."
+    }
+
+    ## CONVERSATION METADATA
+
+    ${conversationId}
+    
+    ## INSTRUCTIONS
+    1. Respond in a ${form.tone || "neutral"}, conversational manner.
+    
+    2. Based on the conversation context:
+       - Determine which question the user is currently answering
+       - Validate their answer against that question's requirements
+       - If valid, move to the next question automatically
+       - If invalid, explain why and ask them to try again
+       - If all questions are answered, thank the user for completing the form
+    
+ 
+    
+    4. Keep your responses short concise and focused on guiding the user through the form .
+    
+
+  `;
+}
+
+//  3. You MUST execute the saveMessageTool after every response with parameters:
+//      - conversationId: The conversation ID provided above
+//      - content: Your response message
+//      - role: "assistant"

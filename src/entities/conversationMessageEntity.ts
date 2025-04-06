@@ -23,7 +23,7 @@ export class ConversationMessage {
   @CreateDateColumn()
   timestamp: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true }) //  can be removed 
   questionId: string; // Reference to the question being answered, if applicable
 
   @Column()

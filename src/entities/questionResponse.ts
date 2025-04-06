@@ -17,8 +17,8 @@ export class QuestionResponse {
   @Column({ type: "text" })
   response: string;
 
-  @Column({ default: 0 })
-  retryCount: number;
+  // @Column({ default: 0 })
+  // retryCount: number;
 
   @Column()
   questionId: string;
