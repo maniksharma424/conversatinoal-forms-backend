@@ -1,0 +1,148 @@
+// src/controllers/testStreamController.ts
+import { Request, Response, NextFunction } from "express";
+import { AIService } from "../services/aiService.js";
+import { ConversationService } from "@/services/conversationService.js";
+import { RedisService } from "@/services/redisService.js";
+
+const conversationService = new ConversationService();
+
+export const testStreamController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Get query parameters
+    const prompt =
+      (req.query.prompt as string) || "Tell me about conversational AI";
+
+    // Set up headers for SSE (Server-Sent Events)
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    // Initialize AI service
+    const aiService = new AIService();
+
+    // Log the start of streaming
+    console.log("Starting stream for prompt:", prompt);
+
+    // Create system prompt similar to what we'd use in conversation
+    const systemPrompt = `
+      You are a helpful conversational assistant for a form-filling application.
+      Keep your responses concise, friendly, and natural-sounding.
+      Respond to the user's input as if you were helping them complete a form.
+    `;
+
+    // Use the streaming function from our AI service
+    const stream = aiService.generateStreamText({
+      prompt,
+      systemPrompt,
+      temperature: 0.7,
+      maxTokens: 500,
+
+      // Handle each chunk as it arrives
+      onChunk: (chunk) => {
+        if (chunk.type === "text-delta") {
+          // In a real implementation, you might:
+          // 1. Update conversation state in database
+          // 2. Process the text in some way
+          console.log("Chunk received:", chunk.text);
+        }
+      },
+
+      // Handle errors
+      onError: (error) => {
+        console.error("Stream error:", error);
+        // In production, you might log this to your monitoring system
+      },
+
+      // When the stream completes
+      onFinish: (data) => {
+        console.log("Stream finished. Total tokens:", data.usage?.totalTokens);
+
+        // In a real implementation, you would:
+        // 1. Save the complete response to ConversationMessage
+        // 2. Update conversation state to ready for next question
+        // 3. Perform any validation on user input based on the AI response
+
+        // Send an event signaling the end of the stream
+        res.write('event: end\ndata: {"status":"complete"}\n\n');
+        res.end();
+      },
+    });
+
+    // Stream the text to the client
+    for await (const textPart of stream.textStream) {
+      // Format as SSE
+      res.write(`data: ${JSON.stringify({ text: textPart })}\n\n`);
+
+      // Ensure the data is sent immediately
+      //   res.flush?.();
+    }
+  } catch (error) {
+    console.error("Error in test stream:", error);
+
+    // Try to send an error event if possible
+    try {
+      res.write(
+        `event: error\ndata: ${JSON.stringify({
+          error: "Stream processing failed",
+        })}\n\n`
+      );
+      res.end();
+    } catch (sendError) {
+      // If we can't send an error event, just end the response
+      res.end();
+    }
+
+    // Don't pass to next() as we've already handled the response
+  }
+};
+
+export const chatController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.formId;
+    const { question, answer, conversationId } = req.body;
+
+    // Validate req params
+    if (!formId) {
+      return res
+        .status(404)
+        .json({ success: false, message: "FormId is required" });
+    }
+
+    await conversationService.chat({
+      formId: formId,
+      res: res,
+      conversationId: conversationId,
+      question: question,
+      answer: answer,
+    });
+  } catch (error) {
+    console.error("Error starting conversation:", error);
+    next(error);
+    return res.status(500).json({
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to start conversation",
+    });
+  }
+};
+
+// okay here's the approach we are following for our conversations
+// 1. two routes -  GET (/startconversation/formID) - POST /chat
+// 2. start conversation will create a new form response , new conversation and returns id's for both along with first question
+// 3. start conversation will also store form details and conversation messages in redis cache
+// 4. user responds to / chat with question + answer add user message to conversation message DB
+// 5. / chat will get the form details  + conversation messages from redis cache makes a system prompt from them and send to LLM along with user's answer for th question (promp should convey LLM to respond with next question or if not valudated retry with same question in a natural way) also we need to send LLM tools (save message , save question response)
+// 6. LLM responds with message stream message to user once stream is done LLM will call our tools
+// 7. save message tool saves message in conversaationMessage DB and updates cpnversation cache
+// 8. save question response tool only save user response which was fed to LLM in the question Response db if it was validated and we hjave moved to next question
+// 9. if user has answered last question properly then along with LLM response it send a key which tells frontend that form is submitted
+
+// based on this design controller  , route and service

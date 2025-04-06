@@ -30,6 +30,7 @@
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.14.1",
+    "redis": "^4.7.0",
     "typeorm": "^0.3.21",
     "uuid": "^9.0.1"
   },
