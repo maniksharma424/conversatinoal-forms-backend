@@ -175,8 +175,3 @@ export function generateChatPrompt(
 
   `;
 }
-
-//  3. You MUST execute the saveMessageTool after every response with parameters:
-//      - conversationId: The conversation ID provided above
-//      - content: Your response message
-//      - role: "assistant"
