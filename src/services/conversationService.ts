@@ -405,4 +405,10 @@ export class ConversationService {
     });
     return { saveQuestionResponseTool, formCompletionTool };
   }
+  async getConversationByFormResponse(
+    formResponseId: string
+  ): Promise<Conversation | null> {
+
+    return this.conversationRepository.findByFormResponse(formResponseId);
+  }
 }

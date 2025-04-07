@@ -21,7 +21,7 @@ export class FormResponseRepository {
   async findByForm(formId: string): Promise<FormResponse[]> {
     return this.repository.find({
       where: { form: { id: formId } },
-      relations: ["questionResponses"],
+      relations: ["questionResponses" , "conversation"],
       order: { startedAt: "DESC" },
     });
   }
