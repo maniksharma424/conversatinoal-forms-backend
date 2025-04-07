@@ -9,6 +9,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
+import formResponseRoutes from "./routes/responseRoutes.js";
 
 // Initialize Express app
 const app = express();
@@ -44,6 +45,10 @@ app.use("/api/v1", questionRoutes);
 
 // conversation routes
 app.use("/api/v1", conversationRoutes);
+
+// form response routes
+app.use("/api/v1", formResponseRoutes);
+
 
 // Health check route
 app.get("/", async (req: Request, res: Response) => {

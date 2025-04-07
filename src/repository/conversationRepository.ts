@@ -23,8 +23,15 @@ export class ConversationRepository {
     formResponseId: string
   ): Promise<Conversation | null> {
     return this.repository.findOne({
-      where: { formResponse: { id: formResponseId } },
-      relations: ["messages"],
+      where: {
+        formResponse: {
+          id: formResponseId,
+        },
+      },
+      relations: {
+        messages: true,
+        formResponse: true,
+      },
     });
   }
 
