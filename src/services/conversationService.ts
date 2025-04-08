@@ -15,6 +15,8 @@ import { generateChatPrompt } from "@/utils/prompts.js";
 import { Conversation } from "@/entities/conversationEntity.js";
 import { FormResponse } from "@/entities/formResponseEntity.js";
 import { AppDataSource } from "@/config/data-source.js";
+import { setFormSessionCookie } from "@/utils/jwtSession.js";
+import { ConversationMessage } from "@/entities/conversationMessageEntity.js";
 
 export interface RespondDTO {
   response: string;
@@ -90,6 +92,9 @@ export class ConversationService {
 
         // Current question is the first question
         currentQuestion = form.questions[0];
+
+        // set cookies for restoration
+        setFormSessionCookie(res, formId, conversation.formResponse.id);
 
         // Send metadata
         this.sendSSEEvent(res, "metadata", {
@@ -405,10 +410,22 @@ export class ConversationService {
     });
     return { saveQuestionResponseTool, formCompletionTool };
   }
+
   async getConversationByFormResponse(
     formResponseId: string
   ): Promise<Conversation | null> {
-
     return this.conversationRepository.findByFormResponse(formResponseId);
+  }
+
+  async getConversationById(
+    conversationId: string
+  ): Promise<Conversation | null> {
+    return this.conversationRepository.findById(conversationId);
+  }
+  
+  async getConversationMessages(
+    conversationId: string
+  ): Promise<ConversationMessage[] | null> {
+    return this.conversationMessageRepository.findByConversation(conversationId);
   }
 }

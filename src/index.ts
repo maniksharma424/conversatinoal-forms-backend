@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/data-source.js";
 
-import formRoutes from "./routes/formRoutes.js";
+import formRoutes, { publicFormRoutes } from "./routes/formRoutes.js";
 import { ENV } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 
@@ -10,6 +10,8 @@ import userRoutes from "./routes/userRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
 import formResponseRoutes from "./routes/responseRoutes.js";
+import cookieParser from "cookie-parser";
+
 
 // Initialize Express app
 const app = express();
@@ -18,6 +20,7 @@ const PORT = ENV.PORT || "3000";
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -31,8 +34,18 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 // Routes
 
+// ------- Public Routes --------
+
 // auth routes
 app.use("/api/v1", authRoutes);
+
+// public form routes
+app.use("/api/v1", publicFormRoutes);
+
+// conversation routes
+app.use("/api/v1", conversationRoutes);
+
+// ---- authneticated routes ----
 
 // user routes
 app.use("/api/v1", userRoutes);
@@ -43,12 +56,10 @@ app.use("/api/v1", formRoutes);
 // question routes
 app.use("/api/v1", questionRoutes);
 
-// conversation routes
-app.use("/api/v1", conversationRoutes);
+
 
 // form response routes
 app.use("/api/v1", formResponseRoutes);
-
 
 // Health check route
 app.get("/", async (req: Request, res: Response) => {

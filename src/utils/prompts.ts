@@ -129,16 +129,23 @@ export function generateChatPrompt(
     ${
       isFirstQuestion
         ? "This is the START of a new conversation. Introduce yourself briefly and ask the first question (based on 'question's order')."
-        : "This is a CONTINUING conversation. Review the conversation history , recent assistant question , user latest response to determine the current question from the from , evaluate the user's response, and proceed accordingly."
+        : "This is a CONTINUING conversation. From ## RecentQuestion , and ## USER's Latest Response  determine the current question from the from , evaluate the user's response, and proceed accordingly Review the last message in MESSAGES and it's role to determine the conversation state.If ## RecentQuestion and ## RecentQuestion  are not present Review the conversation history , Review the last message in MESSAGES and it's role to determine the conversation state recent assistant question , user latest response to determine the current question from the from , evaluate the user's response, and proceed accordingly."
     }
 
     ${
       recentQuestion
-        ? ` "User has responded to this recent question by the assistant : ${recentQuestion}"`
+        ? ` " ## RecentQuestion 
+        User has responded to this recent question by the assistant : ${recentQuestion}"`
         : ""
     }
 
-    ${userResponse ? `User's latest response: "${userResponse}"` : ""}
+    ${
+      userResponse
+        ? `
+    ## User's Latest Response
+    User's latest response: "${userResponse}"`
+        : ""
+    }
     
     
     ${
@@ -162,6 +169,7 @@ export function generateChatPrompt(
        - Validate their answer against that question's requirements
        - If valid, move to the next question automatically
        - If invalid, explain why and ask them to try again
+       - If last message was from the assistant, ask the same question again they might have missed it
        - If all questions are answered, thank the user for completing the form
     
  

@@ -11,11 +11,31 @@ export class FormRepository {
     this.repository = AppDataSource.getRepository(Form);
   }
 
-  async findById(id: string): Promise<Form | null> {
-    return this.repository.findOne({
+  async findById(id: string, isPublic = false): Promise<Form | null> {
+    const queryOptions: any = {
       where: { id },
-      relations: ["questions"],
-    });
+    };
+
+    // Only include questions relation if not public
+    if (!isPublic) {
+      queryOptions.relations = ["questions"];
+    }
+
+    // If public, select all columns except userId
+    if (isPublic) {
+      queryOptions.select = [
+        "id",
+        "title",
+        "description",
+        "tone",
+        "isPublished",
+        "publishedUrl",
+        "createdAt",
+        "updatedAt",
+      ];
+    }
+
+    return this.repository.findOne(queryOptions);
   }
 
   async findByUser(userId: string): Promise<Form[]> {
