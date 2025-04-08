@@ -3,8 +3,11 @@ import { Request, Response, NextFunction } from "express";
 import { AIService } from "../services/aiService.js";
 import { ConversationService } from "@/services/conversationService.js";
 import { RedisService } from "@/services/redisService.js";
+import { getFormSession } from "@/utils/jwtSession.js";
+import { FormResponseService } from "@/services/formResponseService.js";
 
 const conversationService = new ConversationService();
+const formResponseService = new FormResponseService();
 
 export const testStreamController = async (
   req: Request,
@@ -130,6 +133,74 @@ export const chatController = async (
       success: false,
       message:
         error instanceof Error ? error.message : "Failed to start conversation",
+    });
+  }
+};
+
+// Controller for restoring conversation session
+export const restoreConversationController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { formId } = req.body;
+
+    if (!formId ) {
+      return res.status(400).json({
+        success: false,
+        message: "FormId is required",
+      });
+    }
+
+    // Get session from cookies
+    const session = getFormSession(req, formId);
+
+    if (
+      !session ||
+      session.formId !== formId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid session or session expired",
+      });
+    }
+
+    // Otherwise, restore the existing session
+    const formResponse = await formResponseService.getResponseById(session.responseId);
+
+    if (!formResponse || formResponse.completedAt) {
+      return res.status(404).json({
+        success: false,
+        message: "Form response not found or already completed",
+      });
+    }
+
+    const conversation =
+      await conversationService.getConversationByFormResponse(session.responseId);
+
+    if (!conversation || conversation.status !== "in_progress") {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found or not in progress",
+      });
+    }
+
+    // Use the chat service to continue the conversation
+    await conversationService.chat({
+      formId,
+      conversationId: conversation.id,
+      question: undefined, // chat service handles the last messages by conversation ID
+      answer: undefined,
+      res,
+    });
+  } catch (error) {
+    console.error("Error restoring session:", error);
+    next(error);
+    return res.status(500).json({
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to restore session",
     });
   }
 };

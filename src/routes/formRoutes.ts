@@ -5,12 +5,18 @@ import {
   deleteFormController,
   getAllFormsController,
   getFormByIdController,
+  getFormDetails,
   publishFormController,
   unpublishFormController,
   updateFormController,
 } from "../controllers/formController.js";
 
 const formRoutes = Router();
+
+export const publicFormRoutes = Router(); // Separate router for public routes
+
+// Define public routes
+publicFormRoutes.get("/public/form/:id", getFormDetails);
 
 // Apply authentication middleware to all form routes
 formRoutes.use(authenticate);

@@ -44,8 +44,11 @@ export class FormService {
     return this.formRepository.findByUser(userId);
   }
 
-  async getFormById(formId: string): Promise<Form | null> {
-    return this.formRepository.findById(formId);
+  async getFormById(
+    formId: string,
+    isPublic = false
+  ): Promise<Form | null> {
+    return this.formRepository.findById(formId, isPublic);
   }
 
   async createFormFromPrompt(

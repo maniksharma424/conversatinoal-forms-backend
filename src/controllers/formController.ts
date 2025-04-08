@@ -5,8 +5,68 @@ import {
   validateFormCreate,
   validateFormUpdate,
 } from "@/validators/formValidators.js";
+import { getFormSession } from "@/utils/jwtSession.js";
+import { FormResponseService } from "@/services/formResponseService.js";
+import { ConversationService } from "@/services/conversationService.js";
+import { ENV } from "@/config/env.js";
 
 const formService = new FormService();
+
+// Get form details -  public route controller for form submission
+export const getFormDetails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const formId = req.params.id;
+    const form = await formService.getFormById(formId, true); // ispublic = true to fetch public form
+
+    if (!form) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Form not found" });
+    }
+
+    // Check if there's an existing session for this form
+
+    const session = getFormSession(req, formId);
+    console.log(session, "sessions");
+    if (session) {
+      const formResponseService = new FormResponseService();
+      const conversationService = new ConversationService();
+
+      // Verify the form response exists and is incomplete
+      const formResponse = await formResponseService.getResponseById(
+        session.responseId
+      );
+
+      if (formResponse && !formResponse.completedAt) {
+        const conversation =
+          await conversationService.getConversationByFormResponse(
+            formResponse.id
+          );
+
+        if (conversation && conversation.status === "in_progress") {
+          // Redirect to restoration page
+          return res.status(200).json({
+            success: true,
+            restoration: {
+              available: true,
+              responseId: formResponse.id,
+              conversationId: conversation.id,
+            },
+            redirectUrl: `${ENV.FRONTEND_URL}/${formId}restore?action=restore&responseId=${session.responseId}`,
+          });
+        }
+      }
+    }
+
+    return res.json({ success: true, data: form });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Get all forms for the current user
 export const getAllFormsController = async (
