@@ -171,6 +171,12 @@ export const updateFormController = async (
         .status(404)
         .json({ success: false, message: "Form not found" });
     }
+    // Check if the form is published
+    if (existingForm.isPublished) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Cannot edit a published form" });
+    }
 
     if (existingForm.userId !== userId) {
       return res.status(403).json({
@@ -259,6 +265,13 @@ export const publishFormController = async (
         success: false,
         message: "Not authorized to publish this form",
       });
+    }
+
+    // Check if the form is published
+    if (existingForm.isPublished) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Cannot publish a published version of a form" });
     }
 
     const publishedForm = await formService.publishForm(formId);
