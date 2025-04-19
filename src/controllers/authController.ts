@@ -75,7 +75,7 @@ export const googleOAuthCallbackHandler = async (
 
     // Redirect to frontend with tokens
     res.redirect(
-      `${ENV.FRONTEND_URL}/auth-success?token=${token}&refreshToken=${refreshToken}`
+      `${ENV.FRONTEND_URL}/api/auth?token=${token}&refreshToken=${refreshToken}`
     );
   } catch (error) {
     console.error("Google OAuth callback error:", error);
