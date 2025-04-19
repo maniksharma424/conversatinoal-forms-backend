@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Relation,
+  OneToOne,
 } from "typeorm";
 
 import { FormResponse } from "./formResponseEntity.js";
@@ -48,7 +49,7 @@ export class Form {
 
   @ManyToOne(() => User, (user) => user.forms)
   @JoinColumn({ name: "userId" })
-  user:Relation <User>;
+  user: Relation<User>;
 
   @OneToMany(() => Question, (question) => question.form)
   questions: Question[];
@@ -63,4 +64,16 @@ export class Form {
     retryMessage?: string;
     theme?: string;
   };
+
+  // Self-relation: Draft form points to its published version
+  @OneToOne(() => Form, { nullable: true })
+  @JoinColumn({ name: "publishedVersionId" })
+  publishedVersion: Relation<Form>;
+
+  @Column({ nullable: true })
+  publishedVersionId: string;
+
+  // Self-relation: Published form is pointed to by its draft version
+  @OneToOne(() => Form, (form) => form.publishedVersion, { nullable: true })
+  draftVersion: Relation<Form>;
 }

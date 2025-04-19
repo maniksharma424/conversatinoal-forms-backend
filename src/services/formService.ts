@@ -44,10 +44,7 @@ export class FormService {
     return this.formRepository.findByUser(userId);
   }
 
-  async getFormById(
-    formId: string,
-    isPublic = false
-  ): Promise<Form | null> {
+  async getFormById(formId: string, isPublic = false): Promise<Form | null> {
     return this.formRepository.findById(formId, isPublic);
   }
 
@@ -116,11 +113,13 @@ export class FormService {
   }
 
   async publishForm(formId: string): Promise<Form | null> {
-    // Generate a unique URL for the published form
-
-    // to be changed dto match fromtend url
-    const publishUrl = `form_${randomUUID()}`;
-    return this.formRepository.publish(formId, publishUrl);
+    
+    try {
+      return await this.formRepository.publish(formId);
+    } catch (error) {
+      console.error("Error publishing form:", error);
+      throw error;
+    }
   }
 
   async unpublishForm(formId: string): Promise<Form | null> {
