@@ -11,7 +11,7 @@ const conversationRoutes = Router();
 // test stream response route
 conversationRoutes.post("/test/stream", testStreamController);
 
-conversationRoutes.get("/chat/:formId", chatController);
+conversationRoutes.post("/chat/:formId", chatController);
 
 conversationRoutes.get("/conversation/restore", restoreConversationController);
 
