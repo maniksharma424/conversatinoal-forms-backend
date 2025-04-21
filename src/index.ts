@@ -18,31 +18,7 @@ const app = express();
 const PORT = ENV.PORT || "3000";
 
 // Middleware
-// CORS configuration with multiple allowed origins
-app.use(cors({
-  origin: function(origin, callback) {
-    // List all origins that should be allowed to access your API
-    const allowedOrigins = [
-      ENV.FRONTEND_URL ||
-        "https://conversational-forms-govp.vercel.app",
-      "http://localhost:3000",
-      "http://localhost:3001",
-      // Add any other origins that need access
-    ];
-    
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      // Optional: log blocked origins for debugging
-      console.log(`Origin blocked: ${origin}`);
-      callback(null, false);
-    }
-  },
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
