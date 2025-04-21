@@ -46,8 +46,8 @@ export function setFormSessionCookie(
   res.cookie(SESSION_COOKIE_NAME, JSON.stringify(formSessions), {
     maxAge: 999 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true, // Required for sameSite "none"
+    sameSite: "none",
     path: "/",
   });
 }
