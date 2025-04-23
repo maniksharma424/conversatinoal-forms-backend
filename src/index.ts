@@ -12,31 +12,31 @@ import conversationRoutes from "./routes/conversationRoutes.js";
 import formResponseRoutes from "./routes/responseRoutes.js";
 import cookieParser from "cookie-parser";
 
-
 // Initialize Express app
 const app = express();
 const PORT = ENV.PORT || "3000";
 
 // Middleware
-// const corsOptions = {
-//   origin: (origin:string | undefined, callback:any) => {
-//     const allowedOrigins = [
-//       "https://conversational-forms-govp.vercel.app", // Replace with your production frontend URL
-//       "http://localhost:3000", // For local development
-//     ];
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, origin || "*");
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-//   credentials: true, // Enable credentials (cookies)
-//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//   allowedHeaders: ["Content-Type", "Authorization"],
-// };
+const corsOptions = {
+  origin: (origin: string | undefined, callback: any) => {
+    const allowedOrigins = [
+      ENV.FRONTEND_URL,
+      "http://localhost:3001", // For local development
+      "http://localhost:3000", // For local development
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // Enable credentials (cookies)
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -63,7 +63,6 @@ app.use("/api/v1", publicFormRoutes);
 // conversation routes
 app.use("/api/v1", conversationRoutes);
 
-
 // ---- authneticated routes ----
 
 // user routes
@@ -74,8 +73,6 @@ app.use("/api/v1", formRoutes);
 
 // question routes
 app.use("/api/v1", questionRoutes);
-
-
 
 // form response routes
 app.use("/api/v1", formResponseRoutes);

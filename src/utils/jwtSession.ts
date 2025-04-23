@@ -6,7 +6,7 @@ import { ENV } from "@/config/env.js";
 const JWT_SECRET = ENV.JWT_SECRET;
 const SESSION_COOKIE_NAME = "formSessions";
 
-function generateSessionToken(formId: string, responseId: string): string {
+export function generateSessionToken(formId: string, responseId: string): string {
   const payload = {
     formId,
     responseId,
@@ -71,6 +71,7 @@ function verifySessionToken(token: string): {
   }
 }
 
+
 export function getFormSession(
   req: Request,
   formId: string
@@ -79,6 +80,7 @@ export function getFormSession(
   formId: string;
   createdAt: string;
 } | null {
+  console.log(req,"axios-request")
   const cookies = req.cookies;
 
   if (!cookies || !cookies[SESSION_COOKIE_NAME]) {
