@@ -17,7 +17,7 @@ export const publicFormRoutes = Router(); // Separate router for public routes
 
 // Define public routes
 publicFormRoutes.get("/public/form/:id", getFormDetails);
-publicFormRoutes.post("/api/v1/set-session", (req, res) => {
+publicFormRoutes.get("/api/v1/set-session", (req, res) => {
   const SESSION_COOKIE_NAME = "formSessions";
   const formSessions = {
     "testing cookie": "test ran", // Replace with actual data
