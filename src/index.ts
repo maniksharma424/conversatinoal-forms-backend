@@ -18,7 +18,25 @@ const app = express();
 const PORT = ENV.PORT || "3000";
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: (origin:string | undefined, callback:any) => {
+    const allowedOrigins = [
+      "https://conversational-forms-govp.vercel.app", // Replace with your production frontend URL
+      "http://localhost:3000", // For local development
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin || "*");
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // Enable credentials (cookies)
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -44,6 +62,21 @@ app.use("/api/v1", publicFormRoutes);
 
 // conversation routes
 app.use("/api/v1", conversationRoutes);
+
+app.post("/api/v1/set-session", (req, res) => {
+  const SESSION_COOKIE_NAME = "formSessions";
+  const formSessions = {
+    "4d2ca0f0-92eb-456a-8a7f-d018cccb6a4f": "your-jwt-token", // Replace with actual data
+  };
+  res.cookie(SESSION_COOKIE_NAME, JSON.stringify(formSessions), {
+    maxAge: 999 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+  });
+  res.json({ message: "Cookie set" });
+});
 
 // ---- authneticated routes ----
 
