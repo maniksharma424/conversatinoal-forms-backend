@@ -13,6 +13,6 @@ conversationRoutes.post("/test/stream", testStreamController);
 
 conversationRoutes.post("/chat/:formId", chatController);
 
-conversationRoutes.get("/conversation/restore", restoreConversationController);
+conversationRoutes.post("/conversation/restore", restoreConversationController);
 
 export default conversationRoutes;
