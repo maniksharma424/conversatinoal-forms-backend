@@ -17,6 +17,20 @@ export const publicFormRoutes = Router(); // Separate router for public routes
 
 // Define public routes
 publicFormRoutes.get("/public/form/:id", getFormDetails);
+publicFormRoutes.post("/api/v1/set-session", (req, res) => {
+  const SESSION_COOKIE_NAME = "formSessions";
+  const formSessions = {
+    "testing cookie": "test ran", // Replace with actual data
+  };
+  res.cookie(SESSION_COOKIE_NAME, JSON.stringify(formSessions), {
+    maxAge: 999 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+  });
+  res.json({ message: "Cookie set" });
+});
 
 // Apply authentication middleware to all form routes
 formRoutes.use(authenticate);

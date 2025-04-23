@@ -63,20 +63,6 @@ app.use("/api/v1", publicFormRoutes);
 // conversation routes
 app.use("/api/v1", conversationRoutes);
 
-app.post("/api/v1/set-session", (req, res) => {
-  const SESSION_COOKIE_NAME = "formSessions";
-  const formSessions = {
-    "4d2ca0f0-92eb-456a-8a7f-d018cccb6a4f": "your-jwt-token", // Replace with actual data
-  };
-  res.cookie(SESSION_COOKIE_NAME, JSON.stringify(formSessions), {
-    maxAge: 999 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/",
-  });
-  res.json({ message: "Cookie set" });
-});
 
 // ---- authneticated routes ----
 
