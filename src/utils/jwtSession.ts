@@ -42,6 +42,7 @@ export function setFormSessionCookie(
     [formId]: token,
   };
 
+  
   // Set cookie
   res.cookie(SESSION_COOKIE_NAME, JSON.stringify(formSessions), {
     maxAge: 999 * 24 * 60 * 60 * 1000,
