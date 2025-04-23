@@ -18,25 +18,25 @@ const app = express();
 const PORT = ENV.PORT || "3000";
 
 // Middleware
-const corsOptions = {
-  origin: (origin:string | undefined, callback:any) => {
-    const allowedOrigins = [
-      "https://conversational-forms-govp.vercel.app", // Replace with your production frontend URL
-      "http://localhost:3000", // For local development
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, origin || "*");
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true, // Enable credentials (cookies)
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+// const corsOptions = {
+//   origin: (origin:string | undefined, callback:any) => {
+//     const allowedOrigins = [
+//       "https://conversational-forms-govp.vercel.app", // Replace with your production frontend URL
+//       "http://localhost:3000", // For local development
+//     ];
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, origin || "*");
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true, // Enable credentials (cookies)
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization"],
+// };
 
 // Middleware
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
