@@ -22,7 +22,8 @@ const corsOptions = {
     const allowedOrigins = [
       ENV.FRONTEND_URL,
       "http://localhost:3001", // For local development
-      "http://localhost:3000", // For local development
+      "http://localhost:3000", // For local development,
+      "https://conversational-forms-govp.vercel.app"
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
