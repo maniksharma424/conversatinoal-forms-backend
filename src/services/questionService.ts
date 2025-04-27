@@ -185,11 +185,7 @@ export class QuestionService {
         throw new Error("Generated question data is not valid JSON");
       }
 
-      // Assign a default order if not provided
-      if (questionData.order === undefined) {
-        questionData.order = existingQuestions.length;
-      }
-
+  
       return questionData;
     } catch (error) {
       console.error("Error suggesting question:", error);
