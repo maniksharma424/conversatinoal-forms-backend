@@ -94,7 +94,6 @@ const questionUpdateSchema = z
   .object({
     text: z
       .string()
-      .min(3, "Question text must be at least 3 characters")
       .optional(),
     type: z
       .enum(QUESTION_TYPES, {
