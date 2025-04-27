@@ -85,9 +85,9 @@ export class QuestionService {
     form: Form
   ): Promise<Question> {
     try {
-      if (!questionData.text) {
-        throw new Error("Question text is required");
-      }
+      // if (!questionData.text) {
+      //   throw new Error("Question text is required");
+      // }
 
       if (!questionData.type) {
         throw new Error("Question type is required");

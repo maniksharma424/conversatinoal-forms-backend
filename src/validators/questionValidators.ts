@@ -40,7 +40,7 @@ const metadataSchema = z
 // Schema for question creation
 const questionCreateSchema = z
   .object({
-    text: z.string().min(3, "Question text must be at least 3 characters"),
+    text: z.string().optional().default(""),
     type: z
       .enum(QUESTION_TYPES, {
         errorMap: () => ({
