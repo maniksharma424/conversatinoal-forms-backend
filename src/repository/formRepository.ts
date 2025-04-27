@@ -13,30 +13,33 @@ export class FormRepository {
   }
 
   async findById(id: string, isPublic = false): Promise<Form | null> {
-    const queryOptions: any = {
-      where: { id },
-    };
+    // Create the query builder
+    const queryBuilder = this.repository
+      .createQueryBuilder("form")
+      .where("form.id = :id", { id });
 
     // Only include questions and publishedVersion relation if not public
     if (!isPublic) {
-      queryOptions.relations = ["questions", "publishedVersion"];
+      // Join with questions and apply ordering properly
+      queryBuilder
+        .leftJoinAndSelect("form.questions", "questions")
+        .leftJoinAndSelect("form.publishedVersion", "publishedVersion")
+        .orderBy("questions.order", "ASC");
+    } else {
+      // If public, select only specific columns
+      queryBuilder.select([
+        "form.id",
+        "form.title",
+        "form.description",
+        "form.tone",
+        "form.isPublished",
+        "form.publishedUrl",
+        "form.createdAt",
+        "form.updatedAt",
+      ]);
     }
 
-    // If public, select all columns except userId
-    if (isPublic) {
-      queryOptions.select = [
-        "id",
-        "title",
-        "description",
-        "tone",
-        "isPublished",
-        "publishedUrl",
-        "createdAt",
-        "updatedAt",
-      ];
-    }
-
-    return this.repository.findOne(queryOptions);
+    return queryBuilder.getOne();
   }
 
   async findByUser(userId: string): Promise<Form[]> {
