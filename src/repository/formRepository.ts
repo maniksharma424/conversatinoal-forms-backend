@@ -37,6 +37,7 @@ export class FormRepository {
         "form.publishedUrl",
         "form.createdAt",
         "form.updatedAt",
+        "form.settings",
       ]);
     }
 
