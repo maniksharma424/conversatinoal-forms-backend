@@ -106,7 +106,6 @@ const questionUpdateSchema = z
     validationRules: validationRulesSchema.optional(),
     metadata: metadataSchema,
   })
-  .strict()
   .refine(
     (data) => {
       // If type is multiplechoice, options must be provided in validationRules
