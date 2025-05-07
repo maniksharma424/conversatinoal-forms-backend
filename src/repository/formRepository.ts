@@ -124,6 +124,8 @@ export class FormRepository {
         publishedForm = await queryRunner.manager.findOne(Form, {
           where: { id: draftForm.publishedVersionId },
         });
+        draftForm.publishedUrl = `${ENV.FRONTEND_URL}/chat/${publishedForm?.id}`;
+        await queryRunner.manager.save(draftForm);
       }
       // Creating a new published version
       else {
