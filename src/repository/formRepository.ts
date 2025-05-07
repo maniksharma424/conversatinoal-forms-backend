@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { AppDataSource } from "../config/data-source.js";
 import { Form } from "../entities/formEntity.js";
 import { Question } from "@/entities/questionEntity.js";
+import { ENV } from "@/config/env.js";
 
 export class FormRepository {
   private repository: Repository<Form>;
@@ -129,10 +130,11 @@ export class FormRepository {
         const newPublishedForm = this.repository.create(formProperties);
         publishedForm = await queryRunner.manager.save(newPublishedForm);
         await queryRunner.manager.update(Form, publishedForm.id, {
-          publishedUrl: `form-${publishedForm.id}`,
+          publishedUrl: `${ENV.FRONTEND_URL}/chat/${publishedForm.id}`,
         });
 
         draftForm.publishedVersionId = publishedForm.id;
+        draftForm.publishedUrl = `${ENV.FRONTEND_URL}/chat/${publishedForm.id}`;
         await queryRunner.manager.save(draftForm);
       }
 
