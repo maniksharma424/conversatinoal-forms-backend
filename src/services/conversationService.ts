@@ -164,7 +164,7 @@ export class ConversationService {
           answer
         );
       }
-
+      
       const stream = this.aiService.generateStreamText({
         prompt: chatPrompt,
         systemPrompt:
