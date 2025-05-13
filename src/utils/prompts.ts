@@ -101,7 +101,8 @@ export function generateChatPrompt(
   form: Form,
   recentQuestion: string,
   conversationMessages?: ConversationMessage[],
-  userResponse?: string
+  userResponse?: string,
+  formResponseId?: string
 ) {
   // Determine if this is the first question
 
@@ -181,5 +182,12 @@ export function generateChatPrompt(
           - conversationId: "${conversationId}"
           - isValid: true
 
+    6. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if  user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
+         - formResponseId = ${formResponseId},
+         - questionId = Determine Question ID  from the questions present in the form ${
+           form.questions
+         } and the recent question asked,
+         - response = ${userResponse},
+         - isValid - True,
   `;
 }

@@ -119,12 +119,16 @@ export const chatController = async (
         .json({ success: false, message: "FormId is required" });
     }
 
+    // Get session from cookies
+    const session = getFormSession(req, formId);
+
     await conversationService.chat({
       formId: formId,
       res: res,
       conversationId: conversationId,
       question: question,
       answer: answer,
+      formResponseId: session?.responseId,
     });
   } catch (error) {
     console.error("Error starting conversation:", error);
@@ -146,20 +150,16 @@ export const restoreConversationController = async (
   try {
     const { formId } = req.body;
 
-    if (!formId ) {
+    if (!formId) {
       return res.status(400).json({
         success: false,
         message: "FormId is required",
       });
     }
-
     // Get session from cookies
     const session = getFormSession(req, formId);
 
-    if (
-      !session ||
-      session.formId !== formId
-    ) {
+    if (!session || session.formId !== formId) {
       return res.status(403).json({
         success: false,
         message: "Invalid session or session expired",
@@ -167,7 +167,9 @@ export const restoreConversationController = async (
     }
 
     // Otherwise, restore the existing session
-    const formResponse = await formResponseService.getResponseById(session.responseId);
+    const formResponse = await formResponseService.getResponseById(
+      session.responseId
+    );
 
     if (!formResponse || formResponse.completedAt) {
       return res.status(404).json({
@@ -177,7 +179,9 @@ export const restoreConversationController = async (
     }
 
     const conversation =
-      await conversationService.getConversationByFormResponse(session.responseId);
+      await conversationService.getConversationByFormResponse(
+        session.responseId
+      );
 
     if (!conversation || conversation.status !== "in_progress") {
       return res.status(404).json({

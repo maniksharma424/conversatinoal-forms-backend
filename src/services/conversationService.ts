@@ -15,9 +15,7 @@ import { generateChatPrompt } from "@/utils/prompts.js";
 import { Conversation } from "@/entities/conversationEntity.js";
 import { FormResponse } from "@/entities/formResponseEntity.js";
 import { AppDataSource } from "@/config/data-source.js";
-import {
-  generateSessionToken,
-} from "@/utils/jwtSession.js";
+import { generateSessionToken } from "@/utils/jwtSession.js";
 import { ConversationMessage } from "@/entities/conversationMessageEntity.js";
 
 export interface RespondDTO {
@@ -30,6 +28,7 @@ interface ChatProps {
   question?: string;
   answer?: string;
   res: Response;
+  formResponseId?: string;
 }
 
 export class ConversationService {
@@ -60,6 +59,7 @@ export class ConversationService {
     question,
     answer,
     res,
+    formResponseId,
   }: ChatProps): Promise<void> {
     console.log("starting chat ..");
     // Set up SSE headers
@@ -161,10 +161,11 @@ export class ConversationService {
           form,
           question!,
           messages,
-          answer
+          answer,
+          formResponseId
         );
       }
-      
+
       const stream = this.aiService.generateStreamText({
         prompt: chatPrompt,
         systemPrompt:
@@ -173,6 +174,8 @@ export class ConversationService {
         maxSteps: 2, // Allow one tool call plus a final response
         tools: {
           completeForm: this.createConversationTools().formCompletionTool,
+          saveQuestionResponse:
+            this.createConversationTools().saveQuestionResponseTool,
         },
         toolChoice: "auto", // Let the model decide when to call the tool
 
@@ -187,6 +190,7 @@ export class ConversationService {
             error: "Error generating welcome message",
           });
         },
+
         onFinish: async () => {
           // Send completion event
           try {
@@ -218,6 +222,10 @@ export class ConversationService {
             };
           }
         },
+        // onStepFinish({ text, toolCalls, toolResults, finishReason, usage }) {
+        //   console.log(toolCalls, toolResults, "ggmax");
+        //   // your own logic, e.g. for saving the chat history or recording usage
+        // },
       });
 
       // Process the stream for async iteration compatibility
@@ -272,7 +280,7 @@ export class ConversationService {
     // Tool 2: Save Question Response Tool
     const saveQuestionResponseTool = tool({
       description:
-        "Save the user's validated response to a specific question if you are retrying do not save",
+        "Save the user's validated response to a specific question if user has answered question correctly if you are retrying do not save",
       parameters: z.object({
         formResponseId: z.string().describe("ID of the form response"),
         questionId: z.string().describe("ID of the question being answered"),
