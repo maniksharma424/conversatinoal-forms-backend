@@ -139,6 +139,12 @@ export function generateChatPrompt(
         User has responded to this recent question by the assistant : ${recentQuestion}"`
         : ""
     }
+    ${
+      formResponseId
+        ? ` " ## formResponseId 
+        User is currently responsing to form with formResponseId as : ${formResponseId}"`
+        : ""
+    }
 
     ${
       userResponse
@@ -182,7 +188,7 @@ export function generateChatPrompt(
           - conversationId: "${conversationId}"
           - isValid: true
 
-    6. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if  user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
+    6. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
          - formResponseId = ${formResponseId},
          - questionId = Determine Question ID  from the questions present in the form ${
            form.questions
