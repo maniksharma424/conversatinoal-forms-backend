@@ -187,8 +187,15 @@ export function generateChatPrompt(
        a. Call the formCompletionTool tool with these parameters:
           - conversationId: "${conversationId}"
           - isValid: true
+    
+    6. IMPORTANT: If user has given his Name or Email in any of the answer for the question:
+       a. Call the updateFormResponse tool with these parameters:
+          - conversationId: "${conversationId}"
+          - name: name provided by user in the answer
+          - email: email provided by user in the answer
+      
 
-    6. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
+    7. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
          - formResponseId = ${formResponseId},
          - questionId = Determine Question ID  from the questions present in the form ${
            form.questions

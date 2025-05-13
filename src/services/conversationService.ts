@@ -174,6 +174,8 @@ export class ConversationService {
           completeForm: this.createConversationTools().formCompletionTool,
           saveQuestionResponse:
             this.createConversationTools().saveQuestionResponseTool,
+          updateFormResponse:
+            this.createConversationTools().updateFormResponseTool,
         },
         toolChoice: "auto", // Let the model decide when to call the tool
 
@@ -417,7 +419,82 @@ export class ConversationService {
         }
       },
     });
-    return { saveQuestionResponseTool, formCompletionTool };
+
+    const updateFormResponseTool = tool({
+      description:
+        "Update the respondent's email and name in the form response if provided anytime during the conversation",
+      parameters: z.object({
+        conversationId: z
+          .string()
+          .describe("ID of the conversation to mark as completed"),
+        name: z.string().describe("name of the respondent"),
+        email: z.string().describe("emailn of the respondent"),
+      }),
+      execute: async ({ conversationId, name, email }) => {
+        try {
+          // Use a transaction to ensure both updates succeed or fail together
+          return await AppDataSource.transaction(
+            async (transactionalEntityManager) => {
+              // Get the conversation with its associated form response
+              const conversation = await this.conversationRepository.findById(
+                conversationId
+              );
+
+              if (!conversation) {
+                return {
+                  success: false,
+                  message: "Conversation not found",
+                };
+              }
+
+              // Update form response completedAt
+              if (conversation.formResponse) {
+                if (email) {
+                  conversation.formResponse.respondentEmail = email;
+                }
+                if (name) {
+                  conversation.formResponse.respondentName = name;
+                }
+
+                // Save the form response first
+                await transactionalEntityManager.save(
+                  conversation.formResponse
+                );
+              } else {
+                return {
+                  success: false,
+                  message: "Form response not found for this conversation",
+                };
+              }
+
+              // Save the conversation
+              await transactionalEntityManager.save(conversation);
+
+              return {
+                success: true,
+                message: "Updated Form successfully",
+                completedAt: conversation.formResponse.completedAt,
+              };
+            }
+          );
+        } catch (error) {
+          console.error("Error storing respondent detaiks", error);
+          return {
+            success: false,
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to complete form",
+          };
+        }
+      },
+    });
+
+    return {
+      saveQuestionResponseTool,
+      formCompletionTool,
+      updateFormResponseTool,
+    };
   }
 
   async getConversationByFormResponse(
