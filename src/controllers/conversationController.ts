@@ -119,16 +119,12 @@ export const chatController = async (
         .json({ success: false, message: "FormId is required" });
     }
 
-    // Get session from cookies
-    const session = getFormSession(req, formId);
-
     await conversationService.chat({
       formId: formId,
       res: res,
       conversationId: conversationId,
       question: question,
       answer: answer,
-      formResponseId: session?.responseId,
     });
   } catch (error) {
     console.error("Error starting conversation:", error);

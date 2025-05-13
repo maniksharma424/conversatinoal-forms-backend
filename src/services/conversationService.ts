@@ -28,7 +28,6 @@ interface ChatProps {
   question?: string;
   answer?: string;
   res: Response;
-  formResponseId?: string;
 }
 
 export class ConversationService {
@@ -59,7 +58,6 @@ export class ConversationService {
     question,
     answer,
     res,
-    formResponseId,
   }: ChatProps): Promise<void> {
     console.log("starting chat ..");
     // Set up SSE headers
@@ -162,7 +160,7 @@ export class ConversationService {
           question!,
           messages,
           answer,
-          formResponseId
+          conversation?.formResponse?.id
         );
       }
 
