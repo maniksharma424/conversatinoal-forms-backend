@@ -3,7 +3,7 @@ import { ConversationService } from "@/services/conversationService.js";
 import { FormService } from "@/services/formService.js";
 
 export const scheduleJobs = () => {
-  nodeCron.schedule("*/1 * * * *", async () => {
+  nodeCron.schedule("*/50 * * * *", async () => {
     const conversationService = new ConversationService();
     const formService = new FormService();
 
