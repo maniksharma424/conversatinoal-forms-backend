@@ -76,4 +76,7 @@ export class Form {
   // Self-relation: Published form is pointed to by its draft version
   @OneToOne(() => Form, (form) => form.publishedVersion, { nullable: true })
   draftVersion: Relation<Form>;
+  
+  @Column({ type: "text", nullable: true })
+  summary: string;
 }

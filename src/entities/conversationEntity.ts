@@ -35,4 +35,7 @@ export class Conversation {
 
   @OneToMany(() => ConversationMessage, (message) => message.conversation)
   messages: Relation<ConversationMessage[]>;
+
+  @Column({ type: "text", nullable: true })
+  summary: string;
 }
