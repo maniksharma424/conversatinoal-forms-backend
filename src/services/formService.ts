@@ -9,7 +9,7 @@ import {
   generateFormSummaryPrompt,
 } from "@/utils/prompts.js";
 import { QuestionService } from "./questionService.js";
-import { FormResponseRepository } from "@/repository/formResponseRepository.js";
+
 import { FormResponseService } from "./formResponseService.js";
 import { ConversationService } from "./conversationService.js";
 
@@ -47,6 +47,7 @@ export class FormService {
     this.aiService = new AIService();
     this.questionService = new QuestionService();
     this.conversationService = new ConversationService();
+    this.formResponseService = new FormResponseService();
   }
 
   async getAllForms(userId: string): Promise<Form[]> {
@@ -135,13 +136,14 @@ export class FormService {
   }
 
   async generateFormSummary(formId: string): Promise<Form | null> {
+    console.log(formId, "formId-summary");
     try {
       // Fetch all form responses for the form
       const form = await this.formRepository.findById(formId);
       const formResponses = await this.formResponseService.getResponsesByForm(
         formId
       );
-
+      console.log(formResponses, "formResponses-summary");
       // Fetch conversations for each form response and extract summaries
       const conversationSummaries = [];
       for (const response of formResponses) {
