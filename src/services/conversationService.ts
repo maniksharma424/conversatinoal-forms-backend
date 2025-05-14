@@ -11,12 +11,16 @@ import { ConversationMessageRepository } from "@/repository/conversationMessageR
 import { FormResponseRepository } from "@/repository/formResponseRepository.js";
 import { QuestionResponseRepository } from "@/repository/questionResponseRepository.js";
 import { RedisService } from "./redisService.js";
-import { generateChatPrompt } from "@/utils/prompts.js";
+import {
+  generateChatPrompt,
+  generateConversationSummaryPrompt,
+} from "@/utils/prompts.js";
 import { Conversation } from "@/entities/conversationEntity.js";
 import { FormResponse } from "@/entities/formResponseEntity.js";
 import { AppDataSource } from "@/config/data-source.js";
 import { generateSessionToken } from "@/utils/jwtSession.js";
 import { ConversationMessage } from "@/entities/conversationMessageEntity.js";
+import { FormService } from "./formService.js";
 
 export interface RespondDTO {
   response: string;
@@ -38,6 +42,7 @@ export class ConversationService {
   private questionResponseRepository: QuestionResponseRepository;
   private aiService: AIService;
   private redisService: RedisService;
+  // private formService: FormService;
 
   constructor() {
     this.formRepository = new FormRepository();
@@ -47,6 +52,7 @@ export class ConversationService {
     this.questionResponseRepository = new QuestionResponseRepository();
     this.aiService = new AIService();
     this.redisService = new RedisService();
+    // this.formService = new FormService();
 
     // Initialize tools once during service creation
     const tools = this.createConversationTools();
@@ -400,6 +406,17 @@ export class ConversationService {
               // Save the conversation
               await transactionalEntityManager.save(conversation);
 
+              // genrate conversation summary without awaiting
+
+              this.generateConversationSummary(conversation).then(() =>
+                // generate form summary once conversation summary is processed
+                {
+                  const formService = new FormService();
+                  formService.generateFormSummary(
+                    conversation.formResponse.formId
+                  );
+                }
+              );
               return {
                 success: true,
                 message: "Form completed successfully",
@@ -515,5 +532,49 @@ export class ConversationService {
     return this.conversationMessageRepository.findByConversation(
       conversationId
     );
+  }
+
+  async getAllConversations(status?: string): Promise<Conversation[]> {
+    return this.conversationRepository.getAllConversations(status);
+  }
+
+  async abandon(id: string): Promise<Conversation | null> {
+    return this.conversationRepository.abandon(id);
+  }
+  async inProgress(id: string): Promise<Conversation | null> {
+    return this.conversationRepository.inProgress(id);
+  }
+
+  async generateConversationSummary(
+    conversation: Conversation
+  ): Promise<Conversation | null> {
+    try {
+      console.log("start saving summary");
+      const messages = await this.getConversationMessages(conversation?.id);
+      // generate system prompt and prompt to generate summary from conversation and messages
+      if (!messages) {
+        console.error("No Messages found for this conversation:");
+        return null;
+      }
+      const chatPrompt = generateConversationSummaryPrompt(
+        conversation.id,
+        messages
+      );
+      console.log("generating summary");
+      const text = await this.aiService.generateText({
+        prompt: chatPrompt,
+        systemPrompt:
+          "You are a helpful assistant going thorugh conversation messages and generating a summary of the conversation",
+        temperature: 0.7,
+      });
+      const summary = text.response;
+      console.log(summary);
+      return this.conversationRepository.update(conversation.id, {
+        summary,
+      });
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      return null;
+    }
   }
 }

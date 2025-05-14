@@ -4,7 +4,6 @@ import { Repository } from "typeorm";
 import { AppDataSource } from "../config/data-source.js";
 import { Conversation } from "../entities/conversationEntity.js";
 
-
 export class ConversationRepository {
   private repository: Repository<Conversation>;
 
@@ -59,8 +58,22 @@ export class ConversationRepository {
   async abandon(id: string): Promise<Conversation | null> {
     await this.repository.update(id, {
       status: "abandoned",
-      endedAt: new Date(),
     });
     return this.findById(id);
+  }
+
+  async inProgress(id: string): Promise<Conversation | null> {
+    await this.repository.update(id, {
+      status: "in_progress",
+    });
+    return this.findById(id);
+  }
+
+  async getAllConversations(status?: string): Promise<Conversation[]> {
+    const query = {
+      where: status ? { status } : {}
+      // relations: ["messages", "formResponse"],
+    };
+    return this.repository.find(query);
   }
 }

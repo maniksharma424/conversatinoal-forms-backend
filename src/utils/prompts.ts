@@ -204,3 +204,90 @@ export function generateChatPrompt(
          - isValid - True,
   `;
 }
+
+export function generateConversationSummaryPrompt(
+  conversationId: string,
+  conversationMessages: ConversationMessage[]
+): string {
+  // Determine if there are any messages
+  const hasMessages = conversationMessages && conversationMessages.length > 0;
+
+  return `
+    You are a helpful assistant tasked with generating a concise summary of a conversation based on the provided conversation messages.
+
+    ## CONVERSATION METADATA
+    Conversation ID: ${conversationId}
+
+    ## CONVERSATION HISTORY
+    ${
+      hasMessages
+        ? `
+        ${JSON.stringify(
+          conversationMessages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp,
+            questionId: msg.questionId,
+          })),
+          null,
+          2
+        )}`
+        : "No messages in the conversation."
+    }
+
+    ## INSTRUCTIONS
+    1. Analyze the conversation messages to identify key points, topics, and outcomes.
+    2. Generate a concise summary (2-4 sentences) that captures:
+       - The main purpose or topic of the conversation.
+       - Key questions asked and their responses (if applicable).
+       - Any significant outcomes or conclusions (e.g., form completion, user intent).
+       - The overall tone and flow of the conversation.
+    3. If the conversation is empty, state that no conversation has occurred.
+    4. Ensure the summary is clear, neutral, and focused on the conversation's content.
+    5. Do not include any external assumptions or information not present in the messages.
+  `;
+}
+
+// Helper function to generate the form summary prompt
+export function generateFormSummaryPrompt(
+  formId: string,
+  formTitle: string,
+  conversationSummaries: { conversationId: string; summary: string }[]
+): string {
+  // Determine if there are any conversation summaries
+  const hasSummaries = conversationSummaries && conversationSummaries.length > 0;
+
+  return `
+    You are a helpful assistant tasked with generating a concise summary of a form based on the summaries of conversations related to its responses.
+
+    ## FORM METADATA
+    Form ID: ${formId}
+    Form Title: ${formTitle}
+
+    ## CONVERSATION SUMMARIES
+    ${
+      hasSummaries
+        ? `
+        ${JSON.stringify(
+          conversationSummaries.map((cs) => ({
+            conversationId: cs.conversationId,
+            summary: cs.summary,
+          })),
+          null,
+          2
+        )}`
+        : "No conversation summaries available for this form."
+    }
+
+    ## INSTRUCTIONS
+    1. Analyze the conversation summaries to identify common themes, key insights, and overall trends in the form responses.
+    2. Generate a concise summary (3-5 sentences) that captures:
+       - The main purpose or objective of the form.
+       - Common topics or patterns in user responses (e.g., frequent answers, concerns, or feedback).
+       - Any significant outcomes or insights derived from the conversations (e.g., user satisfaction, completion rates).
+       - The overall tone and context of the responses.
+    3. If no conversation summaries are available, state that no responses have been recorded for the form.
+    4. Ensure the summary is clear, neutral, and focused on the form's purpose and response trends.
+    5. Do not include any external assumptions or information not present in the conversation summaries.
+  `;
+}

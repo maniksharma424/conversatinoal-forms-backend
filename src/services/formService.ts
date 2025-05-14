@@ -4,8 +4,14 @@ import { Form } from "../entities/formEntity.js";
 
 import { AIService } from "./aiService.js";
 import { randomUUID } from "crypto";
-import { CREATE_FORM_PROMPT } from "@/utils/prompts.js";
+import {
+  CREATE_FORM_PROMPT,
+  generateFormSummaryPrompt,
+} from "@/utils/prompts.js";
 import { QuestionService } from "./questionService.js";
+import { FormResponseRepository } from "@/repository/formResponseRepository.js";
+import { FormResponseService } from "./formResponseService.js";
+import { ConversationService } from "./conversationService.js";
 
 export interface FormCreate {
   userPrompt: string;
@@ -33,11 +39,14 @@ export class FormService {
   private formRepository: FormRepository;
   private aiService: AIService;
   private questionService: QuestionService;
+  private formResponseService: FormResponseService;
+  private conversationService: ConversationService;
 
   constructor() {
     this.formRepository = new FormRepository();
     this.aiService = new AIService();
     this.questionService = new QuestionService();
+    this.conversationService = new ConversationService();
   }
 
   async getAllForms(userId: string): Promise<Form[]> {
@@ -113,7 +122,6 @@ export class FormService {
   }
 
   async publishForm(formId: string): Promise<Form | null> {
-    
     try {
       return await this.formRepository.publish(formId);
     } catch (error) {
@@ -124,5 +132,52 @@ export class FormService {
 
   async unpublishForm(formId: string): Promise<Form | null> {
     return this.formRepository.unpublish(formId);
+  }
+
+  async generateFormSummary(formId: string): Promise<Form | null> {
+    try {
+      // Fetch all form responses for the form
+      const form = await this.formRepository.findById(formId);
+      const formResponses = await this.formResponseService.getResponsesByForm(
+        formId
+      );
+
+      // Fetch conversations for each form response and extract summaries
+      const conversationSummaries = [];
+      for (const response of formResponses) {
+        const conversation = await this.conversationService.getConversationById(
+          response.conversation.id
+        );
+        if (conversation?.summary) {
+          conversationSummaries.push({
+            conversationId: conversation.id,
+            summary: conversation.summary,
+          });
+        }
+      }
+
+      // Generate the prompt for summarizing the form
+      const summaryPrompt = generateFormSummaryPrompt(
+        formId,
+        form?.title || "Untitled Form",
+        conversationSummaries
+      );
+
+      // Generate the summary using the AI service
+      const text = await this.aiService.generateText({
+        prompt: summaryPrompt,
+        systemPrompt:
+          "You are a helpful assistant analyzing conversation summaries to generate a summary of a form's responses",
+        temperature: 0.7,
+      });
+
+      const summary = text.response;
+
+      // Update the form with the generated summary
+      return this.formRepository.update(formId, { summary });
+    } catch (error) {
+      console.error("Error generating form summary:", error);
+      return null;
+    }
   }
 }

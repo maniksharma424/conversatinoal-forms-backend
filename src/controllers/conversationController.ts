@@ -186,6 +186,9 @@ export const restoreConversationController = async (
       });
     }
 
+    // change status of conversation from abandoned to in_progress
+    await conversationService.inProgress(conversation.id);
+
     // Use the chat service to continue the conversation
     await conversationService.chat({
       formId,

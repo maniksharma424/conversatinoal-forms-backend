@@ -11,6 +11,7 @@ import questionRoutes from "./routes/questionRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
 import formResponseRoutes from "./routes/responseRoutes.js";
 import cookieParser from "cookie-parser";
+import { scheduleJobs } from "./jobs/summaryGenerator.js";
 
 // Initialize Express app
 const app = express();
@@ -23,7 +24,8 @@ const corsOptions = {
       ENV.FRONTEND_URL,
       "http://localhost:3001", // For local development
       "http://localhost:3000", // For local development,
-      "https://conversational-forms-govp.vercel.app"
+      "https://conversational-forms-govp.vercel.app",
+      "https://www.aiformz.in",
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -83,9 +85,11 @@ app.get("/", async (req: Request, res: Response) => {
   res.json({ message: "Working" });
 });
 
+
 async function startServer() {
   try {
     // Initialize TypeORM connection
+    scheduleJobs();
 
     await AppDataSource.initialize();
     console.log("Database connection established");
