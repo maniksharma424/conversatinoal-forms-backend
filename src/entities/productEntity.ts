@@ -31,7 +31,7 @@ export class Product {
   metadata: Record<string, any>;
 
   @Column({ default: true })
-  isActive: boolean;
+  testProduct: boolean;
 
   @Column({ nullable: true })
   dodoPaymentProductId: string;

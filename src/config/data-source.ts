@@ -7,6 +7,8 @@ import {
   QuestionResponse,
   Conversation,
   ConversationMessage,
+  Product,
+  Transaction,
 } from "../entities/index.js";
 import { ENV } from "./env.js";
 
@@ -27,6 +29,8 @@ export const AppDataSource = new DataSource({
     QuestionResponse,
     Conversation,
     ConversationMessage,
+    Product,
+    Transaction
   ],
 //   migrations: [
 //   // Make sure your migrations are listed or globbed here

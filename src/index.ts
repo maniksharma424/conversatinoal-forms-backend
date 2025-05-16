@@ -12,6 +12,7 @@ import conversationRoutes from "./routes/conversationRoutes.js";
 import formResponseRoutes from "./routes/responseRoutes.js";
 import cookieParser from "cookie-parser";
 import { scheduleJobs } from "./jobs/summaryGenerator.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
 
 // Initialize Express app
 const app = express();
@@ -56,6 +57,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Routes
 
 // ------- Public Routes --------
+
+// web hook routes
+app.use("/api/v1", webhookRoutes);
 
 // auth routes
 app.use("/api/v1", authRoutes);

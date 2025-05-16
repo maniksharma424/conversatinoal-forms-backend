@@ -34,6 +34,7 @@
     "node-cron": "^4.0.5",
     "pg": "^8.14.1",
     "redis": "^4.7.0",
+    "standardwebhooks": "^1.0.0",
     "typeorm": "^0.3.21",
     "uuid": "^9.0.1"
   },

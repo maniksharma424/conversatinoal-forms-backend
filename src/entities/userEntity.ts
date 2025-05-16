@@ -7,7 +7,8 @@ import {
   OneToMany,
 } from "typeorm";
 import { Form } from "./formEntity.js";
-import { Transaction } from "./transactionEntity.js";
+import { Transaction } from "./index.js";
+
 
 @Entity()
 export class User {

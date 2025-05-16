@@ -15,11 +15,11 @@ export class ProductRepository {
     return this.repository.findOne({ where: { id } });
   }
 
-  async findAll(includeInactive = false): Promise<Product[]> {
-    if (includeInactive) {
-      return this.repository.find();
+  async findAll(testProduct = false): Promise<Product[]> {
+    if (testProduct) {
+      return this.repository.find({ where: { testProduct: true } });
     }
-    return this.repository.find({ where: { isActive: true } });
+    return this.repository.find({ where: { testProduct: false } });
   }
 
   async create(productData: Partial<Product>): Promise<Product> {
@@ -40,30 +40,34 @@ export class ProductRepository {
     return !!result?.affected && result?.affected > 0;
   }
 
-  async setActive(id: string, isActive: boolean): Promise<Product | null> {
-    await this.repository.update(id, { isActive });
-    return this.findById(id);
-  }
+  //   async setActive(id: string, testProduct: boolean): Promise<Product | null> {
+  //     await this.repository.update(id, { testProduct });
+  //     return this.findById(id);
+  //   }
 
   // Find products by price range
   async findByPriceRange(
     minPrice: number,
-    maxPrice: number
+    maxPrice: number,
+    testProduct: boolean
   ): Promise<Product[]> {
     return this.repository.find({
       where: {
         price: Between(minPrice, maxPrice),
-        isActive: true,
+        testProduct: testProduct ? true : false,
       },
     });
   }
 
   // Find products by conversation count
-  async findByConversationCount(minCount: number): Promise<Product[]> {
+  async findByConversationCount(
+    minCount: number,
+    testProduct: boolean
+  ): Promise<Product[]> {
     return this.repository.find({
       where: {
         conversationCount: MoreThanOrEqual(minCount),
-        isActive: true,
+        testProduct: testProduct ? true : false,
       },
     });
   }

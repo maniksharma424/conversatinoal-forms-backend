@@ -1,4 +1,3 @@
-// transactionEntity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Relation,
 } from "typeorm";
 import { User } from "./userEntity.js";
 import { Product } from "./productEntity.js";
@@ -23,16 +23,16 @@ export class Transaction {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => User, (user) => user.transactions)
+  @ManyToOne(() => User, (user: any) => user.transactions)
   @JoinColumn({ name: "userId" })
-  user: User;
+  user: Relation<User>;
 
   @Column()
   userId: string;
 
-  @ManyToOne(() => Product, (product) => product.transactions)
+  @ManyToOne(() => Product, (product: any) => product.transactions)
   @JoinColumn({ name: "productId" })
-  product: Product;
+  product: Relation<Product>;
 
   @Column()
   productId: string;
