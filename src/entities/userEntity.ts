@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from "typeorm";
 import { Form } from "./formEntity.js";
+import { Transaction } from "./transactionEntity.js";
 
 @Entity()
 export class User {
@@ -36,4 +37,12 @@ export class User {
 
   @OneToMany(() => Form, (form) => form.user)
   forms: Form[];
+
+  // New field for available conversation count
+  @Column({ default: 20 })
+  conversationCount: number;
+
+  // New relationship to transactions
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  transactions: Transaction[];
 }
