@@ -23,6 +23,7 @@ interface Env {
   GOOGLE_CLIENT_SECRET: string;
   GOOGLE_CALLBACK_URL: string;
   FRONTEND_URL: string;
+  DODO_PAYMENTS_API_KEY: string;
 }
 
 export const ENV: Env = {
@@ -41,6 +42,7 @@ export const ENV: Env = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL || "",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
+  DODO_PAYMENTS_API_KEY: process.env.DODO_PAYMENTS_API_KEY || "",
 };
 
 // Validate required variables
@@ -58,6 +60,7 @@ const requiredVars = [
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
   "GOOGLE_CALLBACK_URL",
+  "DODO_PAYMENTS_API_KEY",
 ] as const;
 
 requiredVars.forEach((key) => {

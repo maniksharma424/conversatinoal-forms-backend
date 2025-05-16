@@ -53,6 +53,7 @@ jobs:
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          DODO_PAYMENTS_API_KEY=${{ secrets.DODO_PAYMENTS_API_KEY }}
           EOF
           
           # Create .env.example file
@@ -71,6 +72,7 @@ jobs:
           GOOGLE_CLIENT_SECRET=
           GOOGLE_CALLBACK_URL=
           FRONTEND_URL=
+          DODO_PAYMENTS_API_KEY=
           EOF
           
       - name: Deploy to EC2

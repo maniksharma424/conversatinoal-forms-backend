@@ -64,6 +64,9 @@ app.use("/api/v1", webhookRoutes);
 // auth routes
 app.use("/api/v1", authRoutes);
 
+// payment routes
+app.use("/api/v1", authRoutes);
+
 // public form routes
 app.use("/api/v1", publicFormRoutes);
 

@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { ENV } from "../config/env.js";
 import authService from "../services/authService.js";
 import { UserRepository } from "../repository/userRepository.js";
+import DodoPayments from "dodopayments";
 
 // Initialize OAuth2Client with your credentials and redirect URL
 const client = new OAuth2Client(
@@ -59,6 +60,15 @@ export const googleOAuthCallbackHandler = async (
     let user = await userRepository.findByEmail(email);
 
     if (!user) {
+      const client = new DodoPayments({
+        bearerToken: ENV.DODO_PAYMENTS_API_KEY,
+      });
+
+      const customer = await client.customers.create({
+        email: email,
+        name: payload.given_name || "",
+      });
+
       // Create a new user if one does not exist
       user = await userRepository.create({
         email: email,
@@ -66,6 +76,7 @@ export const googleOAuthCallbackHandler = async (
         firstName: payload.given_name || "",
         lastName: payload.family_name || "",
         isVerified: true, // Users authenticated via Google are automatically verified
+        dodopaymentsCustomerId: customer.customer_id, // Store DodoPayments customer ID
       });
     }
 
@@ -82,8 +93,6 @@ export const googleOAuthCallbackHandler = async (
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 export const getUserProfile = async (
   req: Request,

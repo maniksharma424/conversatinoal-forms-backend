@@ -14,6 +14,9 @@ export class ProductRepository {
   async findById(id: string): Promise<Product | null> {
     return this.repository.findOne({ where: { id } });
   }
+  async findByDodoPaymentsProductId(id: string): Promise<Product | null> {
+    return this.repository.findOne({ where: { dodoPaymentProductId:id } });
+  }
 
   async findAll(testProduct = false): Promise<Product[]> {
     if (testProduct) {

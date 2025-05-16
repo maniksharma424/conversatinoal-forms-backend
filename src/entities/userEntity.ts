@@ -33,6 +33,9 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
+  @Column()
+  dodopaymentsCustomerId: string; // New non-nullable column
+
   @UpdateDateColumn()
   updatedAt: Date;
 
