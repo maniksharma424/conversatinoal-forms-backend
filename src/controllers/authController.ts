@@ -62,6 +62,7 @@ export const googleOAuthCallbackHandler = async (
     if (!user) {
       const client = new DodoPayments({
         bearerToken: ENV.DODO_PAYMENTS_API_KEY,
+        baseURL: ENV.DODO_PAYMENTS_BASE_URL,
       });
 
       const customer = await client.customers.create({
@@ -77,6 +78,7 @@ export const googleOAuthCallbackHandler = async (
         lastName: payload.family_name || "",
         isVerified: true, // Users authenticated via Google are automatically verified
         dodopaymentsCustomerId: customer.customer_id, // Store DodoPayments customer ID
+        conversationCount:20
       });
     }
 

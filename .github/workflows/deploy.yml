@@ -54,6 +54,7 @@ jobs:
           GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
           DODO_PAYMENTS_API_KEY=${{ secrets.DODO_PAYMENTS_API_KEY }}
+          DODO_PAYMENTS_BASE_URL=${{ secrets.DODO_PAYMENTS_BASE_URL }}
           EOF
           
           # Create .env.example file
@@ -73,6 +74,7 @@ jobs:
           GOOGLE_CALLBACK_URL=
           FRONTEND_URL=
           DODO_PAYMENTS_API_KEY=
+          DODO_PAYMENTS_BASE_URL=
           EOF
           
       - name: Deploy to EC2

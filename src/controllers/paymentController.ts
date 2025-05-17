@@ -7,6 +7,7 @@ import {
 import { UserRepository } from "@/repository/userRepository.js";
 import { TransactionRepository } from "@/repository/transactionRepository.js";
 import { ProductRepository } from "@/repository/productRepository.js";
+import { ENV } from "@/config/env.js";
 
 const userRepository = new UserRepository();
 const transactionRepository = new TransactionRepository();
@@ -17,6 +18,7 @@ export const createPaymentLinkController = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
+
   try {
     // Validate request body
     const validationResult = validateCreatePaymentLink(req.body);
@@ -52,8 +54,10 @@ export const createPaymentLinkController = async (
     }
 
     // Initialize DodoPayments client
+
     const client = new DodoPayments({
-      bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+      bearerToken: ENV.DODO_PAYMENTS_API_KEY,
+      baseURL: ENV.DODO_PAYMENTS_BASE_URL,
     });
 
     // Create payment link
@@ -61,13 +65,14 @@ export const createPaymentLinkController = async (
       billing: input.billing,
       customer: {
         customer_id: user.dodopaymentsCustomerId,
-        email: input.email || user.email,
-        name: input.name || `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
       },
       product_cart: input.product_cart,
       metadata: input.metadata,
+      payment_link: true,
     });
-
+    console.log(payment, "payment");
     // Structure the response
     if (payment.payment_link) {
       const response = {
@@ -84,7 +89,7 @@ export const createPaymentLinkController = async (
 
         total_amount: payment.total_amount,
       };
-      console.log(response);
+
       await transactionRepository.create({
         user: user,
         dodoPaymentTransactionId: payment.payment_id,
@@ -98,6 +103,12 @@ export const createPaymentLinkController = async (
       return res
         .status(200)
         .json({ success: true, paymentLink: payment.payment_link });
+    } else {
+      return res.status(500).json({
+        success: false,
+        paymentLink: null,
+        error: " unable to generate payment link please try again",
+      });
     }
   } catch (error) {
     console.log("Error creating payment link:", error);

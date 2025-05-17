@@ -13,6 +13,7 @@ import formResponseRoutes from "./routes/responseRoutes.js";
 import cookieParser from "cookie-parser";
 import { scheduleJobs } from "./jobs/summaryGenerator.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 // Initialize Express app
 const app = express();
@@ -64,8 +65,7 @@ app.use("/api/v1", webhookRoutes);
 // auth routes
 app.use("/api/v1", authRoutes);
 
-// payment routes
-app.use("/api/v1", authRoutes);
+
 
 // public form routes
 app.use("/api/v1", publicFormRoutes);
@@ -80,6 +80,9 @@ app.use("/api/v1", userRoutes);
 
 // form routes
 app.use("/api/v1", formRoutes);
+
+// payment routes
+app.use("/api/v1", paymentRoutes);
 
 // question routes
 app.use("/api/v1", questionRoutes);
