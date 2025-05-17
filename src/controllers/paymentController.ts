@@ -34,7 +34,6 @@ export const createPaymentLinkController = async (
     const result = await paymentService.createPaymentLink(req.user.id, {
       billing: input.billing,
       product_cart: input.product_cart,
-      metadata: input.metadata,
     });
 
     if (!result.success) {

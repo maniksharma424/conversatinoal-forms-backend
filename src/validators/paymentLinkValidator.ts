@@ -28,10 +28,10 @@ export const createPaymentLinkSchema = z
     product_cart: z
       .array(productCartItemSchema)
       .min(1, "At least one product is required"),
-    email: z.string().email("Invalid email format").optional(),
-    name: z.string().min(1, "Name is required").optional(),
-    discount_id: z.string().optional(),
-    metadata: z.record(z.any()).optional(),
+    // email: z.string().email("Invalid email format").optional(),
+    // name: z.string().min(1, "Name is required").optional(),
+    // discount_id: z.string().optional(),
+    // metadata: z.record(z.any()).optional(),
   })
   .strict()
   .refine(

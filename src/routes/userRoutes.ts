@@ -8,7 +8,6 @@ const userRoutes = Router();
 userRoutes.use(authenticate);
 
 // Protected route to get user profile
-
 userRoutes.get("/auth/user", getUserProfile);
 
 export default userRoutes;

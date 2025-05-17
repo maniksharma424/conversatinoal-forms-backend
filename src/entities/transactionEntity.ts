@@ -13,9 +13,17 @@ import { Product } from "./productEntity.js";
 
 // Payment status enum
 export enum PaymentStatus {
-  PENDING = "pending",
-  SUCCESSFUL = "successful",
+  SUCCESSFUL = "succeeded",
   FAILED = "failed",
+  CANCELLED = "cancelled",
+  REQUIRES_CUSTOMER_ACTION = "requires_customer_action",
+  REQUIRES_MERCHANT_ACTION = "requires_merchant_action",
+  REQUIRES_PAYMENT_METHOD = "requires_payment_method",
+  REQUIRES_CONFIRMATION = "requires_confirmation",
+  REQUIRES_CAPTURE = "requires_capture",
+  PARTIALLY_CAPTURED = "partially_captured",
+  PARTIALLY_CAPTURED_AND_CAPTURABLE = "partially_captured_and_capturable",
+  PROCESSING = "processing",
 }
 
 @Entity()
@@ -47,7 +55,7 @@ export class Transaction {
   paymentStatus: string;
 
   @Column({ nullable: true })
-  dodoPaymentTransactionId: string;
+  paymentId: string;
 
   // Consolidated billing information as JSON
   @Column({ type: "jsonb", nullable: true })

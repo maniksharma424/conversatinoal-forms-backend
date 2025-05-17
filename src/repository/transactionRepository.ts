@@ -4,7 +4,6 @@ import { Repository, FindOptionsWhere, Between, LessThan } from "typeorm";
 import { AppDataSource } from "../config/data-source.js";
 import { Transaction } from "../entities/transactionEntity.js";
 
-
 export class TransactionRepository {
   private repository: Repository<Transaction>;
 
@@ -15,6 +14,13 @@ export class TransactionRepository {
   async findById(id: string): Promise<Transaction | null> {
     return this.repository.findOne({
       where: { id },
+      relations: ["user", "product"],
+    });
+  }
+
+  async findByPaymentId(id: string): Promise<Transaction | null> {
+    return this.repository.findOne({
+      where: { paymentId: id },
       relations: ["user", "product"],
     });
   }
@@ -76,11 +82,11 @@ export class TransactionRepository {
   }
 
   async updateByDodoPaymentId(
-    dodoPaymentId: string,
+    paymentId: string,
     status: string
   ): Promise<Transaction | null> {
     const transaction = await this.repository.findOne({
-      where: { dodoPaymentTransactionId: dodoPaymentId },
+      where: { paymentId: paymentId },
     });
 
     if (!transaction) return null;

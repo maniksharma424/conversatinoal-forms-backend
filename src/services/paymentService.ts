@@ -3,6 +3,8 @@ import { UserRepository } from "@/repository/userRepository.js";
 import { TransactionRepository } from "@/repository/transactionRepository.js";
 import { ProductRepository } from "@/repository/productRepository.js";
 import { ENV } from "@/config/env.js";
+import { WebhookPayload } from "@/types/webhookPayload.js";
+import { PaymentStatus } from "@/entities/transactionEntity.js";
 
 export class PaymentService {
   private userRepository: UserRepository;
@@ -25,7 +27,6 @@ export class PaymentService {
     input: {
       billing: any;
       product_cart: { product_id: string; quantity: number }[];
-      metadata?: any;
     }
   ): Promise<{
     success: boolean;
@@ -60,7 +61,7 @@ export class PaymentService {
         name: `${user.firstName} ${user.lastName}`,
       },
       product_cart: input.product_cart,
-      metadata: input.metadata,
+      metadata: { userId: user.id },
       payment_link: true,
     });
 
@@ -71,7 +72,7 @@ export class PaymentService {
     // Create transaction
     await this.transactionRepository.create({
       user,
-      dodoPaymentTransactionId: payment.payment_id,
+      paymentId: payment.payment_id,
       amountPaid: payment.total_amount,
       paymentStatus: "pending",
       product,
@@ -100,5 +101,73 @@ export class PaymentService {
       throw new Error("Unable to fetch products");
     }
     // Fetch products from DodoPayments
+  }
+
+  async updateTransactionFromWebhook(
+    paymentId: string,
+    userId: string,
+    payload: WebhookPayload
+  ): Promise<boolean> {
+    // Find the transaction by dodoPaymentTransactionId
+    const transaction = await this.transactionRepository.findByPaymentId(
+      paymentId
+    );
+
+    if (!transaction) {
+      return false;
+    }
+
+    // Verify userId matches the transaction
+    if (transaction.userId !== userId) {
+      return false;
+    }
+
+    // Map webhook status to PaymentStatus
+    const paymentStatus = Object.values(PaymentStatus).includes(
+      payload.status as PaymentStatus
+    )
+      ? (payload.status as PaymentStatus)
+      : null;
+
+    if (!paymentStatus) {
+      return false;
+    }
+
+    // Prepare transaction update data
+    const updateData: Partial<any> = {
+      paymentStatus,
+      billingDetails: {
+        billing: payload.billing,
+        customer: payload.customer,
+        settlement_amount: payload.settlement_amount,
+        settlement_currency: payload.settlement_currency,
+        tax: payload.tax,
+        payment_method: payload.payment_method,
+        payment_method_type: payload.payment_method_type,
+        card_details: {
+          card_last_four: payload.card_last_four,
+          card_network: payload.card_network,
+          card_type: payload.card_type,
+          card_issuing_country: payload.card_issuing_country,
+        },
+        discount_id: payload.discount_id,
+        error_message: payload.error_message,
+        product_cart: payload.product_cart,
+        disputes: payload.disputes,
+        refunds: payload.refunds,
+      },
+    };
+
+    // Set paymentCompletedAt if status is successful
+    if (paymentStatus === PaymentStatus.SUCCESSFUL) {
+      updateData.paymentCompletedAt = new Date(
+        payload.updated_at || Date.now()
+      );
+    }
+
+    // Update the transaction
+    await this.transactionRepository.update(transaction.id, updateData);
+
+    return true;
   }
 }
