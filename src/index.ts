@@ -14,6 +14,7 @@ import cookieParser from "cookie-parser";
 import { scheduleJobs } from "./jobs/summaryGenerator.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
 
 // Initialize Express app
 const app = express();
@@ -65,6 +66,8 @@ app.use("/api/v1", webhookRoutes);
 // auth routes
 app.use("/api/v1", authRoutes);
 
+// auth routes
+app.use("/api/v1", productRoutes);
 
 
 // public form routes

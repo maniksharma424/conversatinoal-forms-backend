@@ -1,24 +1,17 @@
 import { Request, Response, NextFunction } from "express";
-import DodoPayments from "dodopayments";
 import {
   CreatePaymentLinkInput,
   validateCreatePaymentLink,
 } from "@/validators/paymentLinkValidator.js";
-import { UserRepository } from "@/repository/userRepository.js";
-import { TransactionRepository } from "@/repository/transactionRepository.js";
-import { ProductRepository } from "@/repository/productRepository.js";
-import { ENV } from "@/config/env.js";
+import { PaymentService } from "@/services/paymentService.js";
 
-const userRepository = new UserRepository();
-const transactionRepository = new TransactionRepository();
-const productRepository = new ProductRepository();
+const paymentService = new PaymentService();
 
 export const createPaymentLinkController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-
   try {
     // Validate request body
     const validationResult = validateCreatePaymentLink(req.body);
@@ -30,88 +23,56 @@ export const createPaymentLinkController = async (
     }
     const input: CreatePaymentLinkInput = validationResult.data!;
 
-    // Get user ID and customer ID from authenticated user
-
+    // Verify user authentication
     if (!req.user || !req.user.id) {
       return res.status(401).json({
-        error: "Unauthorized: User not authenticated ",
+        error: "Unauthorized: User not authenticated",
       });
     }
 
-    let user = await userRepository.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({
-        error: "User not found",
-      });
-    }
-    let product = await productRepository.findByDodoPaymentsProductId(
-      input.product_cart[0].product_id
-    );
-    if (!product) {
-      return res.status(404).json({
-        error: "Product not found",
-      });
-    }
-
-    // Initialize DodoPayments client
-
-    const client = new DodoPayments({
-      bearerToken: ENV.DODO_PAYMENTS_API_KEY,
-      baseURL: ENV.DODO_PAYMENTS_BASE_URL,
-    });
-
-    // Create payment link
-    const payment = await client.payments.create({
+    // Call service to create payment link
+    const result = await paymentService.createPaymentLink(req.user.id, {
       billing: input.billing,
-      customer: {
-        customer_id: user.dodopaymentsCustomerId,
-        email: user.email,
-        name: `${user.firstName} ${user.lastName}`,
-      },
       product_cart: input.product_cart,
       metadata: input.metadata,
-      payment_link: true,
     });
-    console.log(payment, "payment");
-    // Structure the response
-    if (payment.payment_link) {
-      const response = {
-        client_secret: payment.client_secret,
-        customer: {
-          customer_id: payment.customer.customer_id,
-          email: payment.customer.email,
-          name: payment.customer.name,
-        },
-        discount_id: payment.discount_id || null,
-        metadata: payment.metadata || {},
-        payment_id: payment.payment_id,
-        payment_link: payment.payment_link,
 
-        total_amount: payment.total_amount,
-      };
-
-      await transactionRepository.create({
-        user: user,
-        dodoPaymentTransactionId: payment.payment_id,
-        amountPaid: payment.total_amount,
-        paymentStatus: "pending",
-        product: product,
-        conversationsPurchased: product.conversationCount,
-        billingDetails: input.billing,
-      });
-
-      return res
-        .status(200)
-        .json({ success: true, paymentLink: payment.payment_link });
-    } else {
+    if (!result.success) {
       return res.status(500).json({
         success: false,
         paymentLink: null,
-        error: " unable to generate payment link please try again",
+        error:
+          result.paymentLink === undefined
+            ? "Unable to generate payment link please try again"
+            : "Invalid user or product",
       });
     }
-  } catch (error) {
+
+    return res.status(200).json({
+      success: true,
+      paymentLink: result.paymentLink,
+    });
+  } catch (error: any) {
     console.log("Error creating payment link:", error);
+    next(error);
+  }
+};
+
+export const listPaymentProductsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const env = req.query.env as string;
+  const testProducts = env === "test" ? true : false;
+  try {
+    const products = await paymentService.listPaymentProducts(testProducts);
+    return res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error: any) {
+    console.log("Error fetching payment products:", error);
     next(error);
   }
 };
