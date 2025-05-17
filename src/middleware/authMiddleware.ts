@@ -19,7 +19,7 @@ export const authenticate = (
 
   // Extract the token
   const token = authHeader.split(" ")[1];
-
+  console.log(token);
   // Verify the token and get the user
   authService
     .verifyToken(token)

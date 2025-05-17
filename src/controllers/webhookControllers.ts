@@ -3,7 +3,6 @@ import { PaymentService } from "@/services/paymentService.js";
 import { WebhookPayload } from "@/types/webhookPayload.js";
 import { PaymentStatus } from "@/entities/transactionEntity.js";
 
-
 const paymentService = new PaymentService();
 
 export const dodoPaymentsWebhookController = async (
@@ -24,7 +23,7 @@ export const dodoPaymentsWebhookController = async (
     // await Webhook.verify(rawBody, webhookHeaders);
 
     // Extract and validate payload
-    const payload: WebhookPayload = req.body;
+    const payload: WebhookPayload = req.body.data;
     console.log(payload, "dodo webhook payload");
 
     // Validate required fields
@@ -44,19 +43,21 @@ export const dodoPaymentsWebhookController = async (
     if (
       !Object.values(PaymentStatus).includes(payload.status as PaymentStatus)
     ) {
+      console.log("invalid status ");
       return res
         .status(400)
         .json({ error: `Invalid payment status: ${payload.status}` });
     }
 
     // Update transaction via PaymentService
-    const success = await paymentService.updateTransactionFromWebhook(
+    const transaction = await paymentService.updateTransactionFromWebhook(
       payload.payment_id,
       userId,
       payload
     );
-
-    if (!success) {
+    console.log(transaction, "success");
+    if (!transaction) {
+      console.log("Transaction not found or userId mismatch");
       return res.status(404).json({
         error: `Transaction not found or userId mismatch for payment_id: ${payload.payment_id}`,
       });

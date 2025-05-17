@@ -4,7 +4,7 @@ import { TransactionRepository } from "@/repository/transactionRepository.js";
 import { ProductRepository } from "@/repository/productRepository.js";
 import { ENV } from "@/config/env.js";
 import { WebhookPayload } from "@/types/webhookPayload.js";
-import { PaymentStatus } from "@/entities/transactionEntity.js";
+import { PaymentStatus, Transaction } from "@/entities/transactionEntity.js";
 
 export class PaymentService {
   private userRepository: UserRepository;
@@ -63,6 +63,7 @@ export class PaymentService {
       product_cart: input.product_cart,
       metadata: { userId: user.id },
       payment_link: true,
+      billing_currency:"USD"
     });
 
     if (!payment.payment_link) {
@@ -107,19 +108,19 @@ export class PaymentService {
     paymentId: string,
     userId: string,
     payload: WebhookPayload
-  ): Promise<boolean> {
+  ): Promise<Transaction | null> {
     // Find the transaction by dodoPaymentTransactionId
     const transaction = await this.transactionRepository.findByPaymentId(
       paymentId
     );
 
     if (!transaction) {
-      return false;
+      return null;
     }
 
     // Verify userId matches the transaction
     if (transaction.userId !== userId) {
-      return false;
+      return null;
     }
 
     // Map webhook status to PaymentStatus
@@ -130,12 +131,11 @@ export class PaymentService {
       : null;
 
     if (!paymentStatus) {
-      return false;
+      return null;
     }
 
     // Prepare transaction update data
     const updateData: Partial<any> = {
-      paymentStatus,
       billingDetails: {
         billing: payload.billing,
         customer: payload.customer,
@@ -158,16 +158,13 @@ export class PaymentService {
       },
     };
 
-    // Set paymentCompletedAt if status is successful
-    if (paymentStatus === PaymentStatus.SUCCESSFUL) {
-      updateData.paymentCompletedAt = new Date(
-        payload.updated_at || Date.now()
-      );
-    }
-
     // Update the transaction
-    await this.transactionRepository.update(transaction.id, updateData);
-
-    return true;
+    return this.transactionRepository.update(transaction.id, {
+      paymentStatus: paymentStatus,
+      billingDetails: updateData.billingDetails,
+      paymentCompletedAt:
+        paymentStatus === PaymentStatus.SUCCESSFUL ? new Date() : undefined,
+      updatedAt: new Date(),
+    });
   }
 }
