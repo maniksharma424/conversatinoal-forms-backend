@@ -1,3 +1,4 @@
+import { Transaction } from "@/entities/transactionEntity.ts";
 import { Form } from "../entities/formEntity.js";
 
 // This extends the Express namespace to include compatibility with our User type
@@ -14,6 +15,8 @@ declare global {
       createdAt: Date;
       updatedAt: Date;
       forms: Form[];
+      conversationCount: number;
+      transactions: Transaction[];
     }
 
     // Add this interface to extend the Request type

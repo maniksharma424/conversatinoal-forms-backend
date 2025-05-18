@@ -5,6 +5,7 @@ import authService from "../services/authService.js";
 import { UserRepository } from "../repository/userRepository.js";
 import DodoPayments from "dodopayments";
 
+
 // Initialize OAuth2Client with your credentials and redirect URL
 const client = new OAuth2Client(
   ENV.GOOGLE_CLIENT_ID,
@@ -78,7 +79,7 @@ export const googleOAuthCallbackHandler = async (
         lastName: payload.family_name || "",
         isVerified: true, // Users authenticated via Google are automatically verified
         dodopaymentsCustomerId: customer.customer_id, // Store DodoPayments customer ID
-        conversationCount:20
+        conversationCount: 20,
       });
     }
 
@@ -117,6 +118,7 @@ export const getUserProfile = async (
       lastName: user.lastName,
       isVerified: user.isVerified,
       createdAt: user.createdAt,
+      transactions:user.transactions
     };
 
     res.status(200).json(userProfile);

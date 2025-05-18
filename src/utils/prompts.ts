@@ -187,6 +187,7 @@ export function generateChatPrompt(
        a. Call the formCompletionTool tool with these parameters:
           - conversationId: "${conversationId}"
           - isValid: true
+          - userId: ${form.userId}
     
     6. IMPORTANT: If user has given his Name or Email in any of the answer for the question:
        a. Call the updateFormResponse tool with these parameters:

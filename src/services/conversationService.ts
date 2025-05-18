@@ -21,6 +21,7 @@ import { AppDataSource } from "@/config/data-source.js";
 import { generateSessionToken } from "@/utils/jwtSession.js";
 import { ConversationMessage } from "@/entities/conversationMessageEntity.js";
 import { FormService } from "./formService.js";
+import { UserRepository } from "@/repository/userRepository.js";
 
 export interface RespondDTO {
   response: string;
@@ -36,17 +37,20 @@ interface ChatProps {
 
 export class ConversationService {
   private formRepository: FormRepository;
+  private userRepository: UserRepository;
   private conversationRepository: ConversationRepository;
   private conversationMessageRepository: ConversationMessageRepository;
   private formResponseRepository: FormResponseRepository;
   private questionResponseRepository: QuestionResponseRepository;
   private aiService: AIService;
   private redisService: RedisService;
+
   // private formService: FormService;
 
   constructor() {
     this.formRepository = new FormRepository();
     this.conversationRepository = new ConversationRepository();
+    this.userRepository = new UserRepository();
     this.conversationMessageRepository = new ConversationMessageRepository();
     this.formResponseRepository = new FormResponseRepository();
     this.questionResponseRepository = new QuestionResponseRepository();
@@ -81,6 +85,17 @@ export class ConversationService {
 
       // CASE 1: Starting a new conversation (no conversationId provided)
       if (!conversationId) {
+        // check if form owner has balance for new conversation
+
+        const user = await this.userRepository.findById(form.userId);
+        if (!user) {
+          throw new Error("User not found");
+        }
+        if (user?.conversationCount <= 0) {
+          throw new Error(
+            "Conversation limit reached for user related to this form "
+          );
+        }
         const formResponse = new FormResponse();
         formResponse.formId = form.id;
 
@@ -352,8 +367,9 @@ export class ConversationService {
           .string()
           .describe("ID of the conversation to mark as completed"),
         isValid: z.boolean().describe("Whether the final answer was valid"),
+        userId: z.string().describe("ID of the user related to that form"),
       }),
-      execute: async ({ conversationId, isValid }) => {
+      execute: async ({ conversationId, isValid, userId }) => {
         if (!isValid) {
           return {
             success: false,
@@ -407,6 +423,19 @@ export class ConversationService {
               await transactionalEntityManager.save(conversation);
 
               // genrate conversation summary without awaiting
+              const user = await this.userRepository.findById(userId);
+              if (!user) {
+                return {
+                  success: false,
+                  message:
+                    "Cannot find user related to this conversation or form",
+                };
+              }
+
+              const updatedCobversationCount = user?.conversationCount - 1;
+              await this.userRepository.update(userId, {
+                conversationCount: updatedCobversationCount,
+              });
 
               this.generateConversationSummary(conversation).then(() =>
                 // generate form summary once conversation summary is processed
