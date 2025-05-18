@@ -63,7 +63,7 @@ export class PaymentService {
       product_cart: input.product_cart,
       metadata: { userId: user.id },
       payment_link: true,
-      billing_currency:"USD"
+      billing_currency: "USD",
     });
 
     if (!payment.payment_link) {
@@ -132,6 +132,28 @@ export class PaymentService {
 
     if (!paymentStatus) {
       return null;
+    }
+    const product = await this.productRepository.findById(
+      transaction.productId
+    );
+
+    if (!product) {
+      return null;
+    }
+
+    if (paymentStatus === PaymentStatus.SUCCESSFUL) {
+      // update user conversations count by product conversation count
+
+      const user = await this.userRepository.findById(transaction.userId);
+
+      if (!user) {
+        return null;
+      }
+      const updatedConversationCount =
+        product?.conversationCount + user?.conversationCount;
+      await this.userRepository.update(transaction.userId, {
+        conversationCount: updatedConversationCount,
+      });
     }
 
     // Prepare transaction update data
