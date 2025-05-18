@@ -64,6 +64,7 @@ export class PaymentService {
       metadata: { userId: user.id },
       payment_link: true,
       billing_currency: "USD",
+      return_url: `${ENV.FRONTEND_URL}/payment`,
     });
 
     if (!payment.payment_link) {
@@ -110,6 +111,7 @@ export class PaymentService {
     payload: WebhookPayload
   ): Promise<Transaction | null> {
     // Find the transaction by dodoPaymentTransactionId
+
     const transaction = await this.transactionRepository.findByPaymentId(
       paymentId
     );
@@ -118,8 +120,11 @@ export class PaymentService {
       return null;
     }
 
-    // Verify userId matches the transaction
     if (transaction.userId !== userId) {
+      console.log("UserId mismatch:", {
+        transactionUserId: transaction.userId,
+        providedUserId: userId,
+      });
       return null;
     }
 
@@ -131,26 +136,37 @@ export class PaymentService {
       : null;
 
     if (!paymentStatus) {
+      console.log("Invalid payment status in mapping:", payload.status);
       return null;
     }
+
+    // Find product
+    console.log("Finding product by id:", transaction.productId);
     const product = await this.productRepository.findById(
       transaction.productId
     );
+    console.log("Product found:", product);
 
     if (!product) {
+      console.log("Product not found for productId:", transaction.productId);
       return null;
     }
 
     if (paymentStatus === PaymentStatus.SUCCESSFUL) {
-      // update user conversations count by product conversation count
-
+      // Update user conversations count by product conversation count
       const user = await this.userRepository.findById(transaction.userId);
 
       if (!user) {
+        console.log("User not found for userId:", transaction.userId);
         return null;
       }
       const updatedConversationCount =
         product?.conversationCount + user?.conversationCount;
+      console.log(
+        "Calculated new conversation count:",
+        updatedConversationCount
+      );
+
       await this.userRepository.update(transaction.userId, {
         conversationCount: updatedConversationCount,
       });
@@ -181,12 +197,19 @@ export class PaymentService {
     };
 
     // Update the transaction
-    return this.transactionRepository.update(transaction.id, {
+
+    await this.transactionRepository.update(transaction.id, {
       paymentStatus: paymentStatus,
       billingDetails: updateData.billingDetails,
       paymentCompletedAt:
         paymentStatus === PaymentStatus.SUCCESSFUL ? new Date() : undefined,
       updatedAt: new Date(),
     });
+
+    const updatedTransaction = await this.transactionRepository.findById(
+      transaction.id
+    );
+
+    return updatedTransaction;
   }
 }

@@ -2,7 +2,7 @@
 import { Repository, FindOptionsWhere, Between, LessThan } from "typeorm";
 
 import { AppDataSource } from "../config/data-source.js";
-import { Transaction } from "../entities/transactionEntity.js";
+import { PaymentStatus, Transaction } from "../entities/transactionEntity.js";
 
 export class TransactionRepository {
   private repository: Repository<Transaction>;
@@ -59,7 +59,7 @@ export class TransactionRepository {
     transactionData: Partial<Transaction>
   ): Promise<Transaction | null> {
     await this.repository.update(id, transactionData);
-    return this.findById(id);
+    return await this.findById(id);
   }
 
   async updatePaymentStatus(
@@ -71,7 +71,7 @@ export class TransactionRepository {
       paymentStatus: status,
     };
 
-    if (status === "successful" && !completedAt) {
+    if (status === PaymentStatus.SUCCESSFUL && !completedAt) {
       updateData.paymentCompletedAt = new Date();
     } else if (completedAt) {
       updateData.paymentCompletedAt = completedAt;
@@ -100,7 +100,7 @@ export class TransactionRepository {
   ): Promise<Transaction[]> {
     return this.repository.find({
       where: {
-        paymentStatus: "successful",
+        paymentStatus: PaymentStatus.SUCCESSFUL,
         paymentCompletedAt: Between(startDate, endDate),
       },
       relations: ["user", "product"],

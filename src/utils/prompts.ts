@@ -207,7 +207,7 @@ export function generateChatPrompt(
 }
 
 export function generateConversationSummaryPrompt(
-  conversationId: string,
+conversationId: string,
   conversationMessages: ConversationMessage[]
 ): string {
   // Determine if there are any messages
