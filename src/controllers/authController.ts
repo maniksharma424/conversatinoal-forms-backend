@@ -118,7 +118,8 @@ export const getUserProfile = async (
       lastName: user.lastName,
       isVerified: user.isVerified,
       createdAt: user.createdAt,
-      transactions:user.transactions
+      transactions:user.transactions,
+      conversationCount: user.conversationCount,
     };
 
     res.status(200).json(userProfile);
