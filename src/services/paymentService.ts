@@ -64,7 +64,7 @@ export class PaymentService {
       metadata: { userId: user.id },
       payment_link: true,
       billing_currency: "USD",
-      return_url: `${ENV.FRONTEND_URL}/payment`,
+      return_url: `${ENV.FRONTEND_URL}/dashboard`,
     });
 
     if (!payment.payment_link) {
