@@ -37,6 +37,8 @@ export class GrokService {
     onError: (err: Error) => void;
     onFinish: () => void;
   }): AsyncIterable<string> {
+
+    
     try {
       const res = await fetch(this.apiUrl, {
         method: "POST",
