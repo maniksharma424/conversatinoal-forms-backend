@@ -22,6 +22,7 @@ import { generateSessionToken } from "@/utils/jwtSession.js";
 import { ConversationMessage } from "@/entities/conversationMessageEntity.js";
 import { FormService } from "./formService.js";
 import { UserRepository } from "@/repository/userRepository.js";
+import { GrokService } from "./grokChatService.js";
 
 export interface RespondDTO {
   response: string;
@@ -44,6 +45,7 @@ export class ConversationService {
   private questionResponseRepository: QuestionResponseRepository;
   private aiService: AIService;
   private redisService: RedisService;
+  private grokChatService: GrokService;
 
   // private formService: FormService;
 
@@ -56,6 +58,7 @@ export class ConversationService {
     this.questionResponseRepository = new QuestionResponseRepository();
     this.aiService = new AIService();
     this.redisService = new RedisService();
+    this.grokChatService = new GrokService();
     // this.formService = new FormService();
 
     // Initialize tools once during service creation
@@ -184,12 +187,11 @@ export class ConversationService {
           conversation?.formResponse?.id
         );
       }
-
-      const stream = this.aiService.generateStreamText({
+      // service to execute tools in background
+      const response = this.aiService.generateText({
         prompt: chatPrompt,
         systemPrompt:
-          "You are a helpful, conversational assistant guiding users through the form",
-        temperature: 0.7,
+          "You are a helpful, conversational assistant reviewing user's responses for forms and executing available tools  ",
         maxSteps: 2, // Allow one tool call plus a final response
         tools: {
           completeForm: this.createConversationTools().formCompletionTool,
@@ -199,58 +201,46 @@ export class ConversationService {
             this.createConversationTools().updateFormResponseTool,
         },
         toolChoice: "auto", // Let the model decide when to call the tool
+      });
 
-        onChunk: (chunk) => {
-          if (chunk.type === "text-delta") {
-            fullMessage += chunk.textDelta;
-          }
+      // chat service to faster responses
+      const { textStream } = this.grokChatService.generateStreamText({
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant guiding users through a form",
+          },
+          { role: "user", content: chatPrompt },
+        ],
+        onChunk: (delta: string) => {
+          console.log(delta, "delta");
+          fullMessage += delta;
         },
-        onError: (error) => {
-          console.error("Stream error:", error);
+        onError: (err) => {
+          console.error("Grok stream error:", err);
           this.sendSSEEvent(res, "error", {
             error: "Error generating welcome message",
           });
         },
-
         onFinish: async () => {
-          // Send completion event
-          try {
-            const message = await this.conversationMessageRepository.create({
-              content: fullMessage,
-              role: "assistant",
-              conversationId: conversationId || conversation.id,
-            });
-            console.log(
-              "SAVED assistant message in conversation messages",
-              message
-            );
-            // Update the message cache
-            // await this.redisService.addMessageToCache(
-            //   conversationId || conversation.id,
-            //   message
-            // );
-
-            this.sendSSEEvent(res, "end", { success: true, complete: true });
-            res.end();
-          } catch (error) {
-            console.error("Error saving message:", error);
-            return {
-              success: false,
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to save message",
-            };
-          }
+          const message = await this.conversationMessageRepository.create({
+            content: fullMessage,
+            role: "assistant",
+            conversationId: conversationId || conversation.id,
+          });
+          console.log(message, "message saved ");
+          this.sendSSEEvent(res, "end", { success: true, complete: true });
+          res.end();
         },
-        // onStepFinish({ text, toolCalls, toolResults, finishReason, usage }) {
-        //   console.log(toolCalls, toolResults, "ggmax");
-        //   // your own logic, e.g. for saving the chat history or recording usage
-        // },
       });
 
+      for await (const delta of textStream) {
+        res.write(`data: ${JSON.stringify({ text: delta })}\n\n`);
+      }
+
       // Process the stream for async iteration compatibility
-      for await (const textPart of stream.textStream) {
+      for await (const textPart of textStream) {
+        console.log(textStream, "text part");
         // this.sendSSEEvent(res, "data", { text: textPart });
         res.write(`data: ${JSON.stringify({ text: textPart })}\n\n`);
       }

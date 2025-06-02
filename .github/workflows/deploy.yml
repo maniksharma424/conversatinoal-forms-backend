@@ -49,6 +49,7 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           REFRESH_JWT_SECRET=${{ secrets.REFRESH_JWT_SECRET }}
           DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+          X_AI_API_KEY=${{ secrets.X_AI_API_KEY }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
@@ -69,6 +70,7 @@ jobs:
           JWT_SECRET=
           REFRESH_JWT_SECRET=
           DEEPSEEK_API_KEY=
+          X_AI_API_KEY=
           GOOGLE_CLIENT_ID=
           GOOGLE_CLIENT_SECRET=
           GOOGLE_CALLBACK_URL=

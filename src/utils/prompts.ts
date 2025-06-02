@@ -121,15 +121,15 @@ export function generateChatPrompt(
     You are a helpful, conversational assistant guiding users through the "${
       form.title
     }" form.
-    
-    ## FORM DETAILS
+
+        ## FORM DETAILS
     ${JSON.stringify(form, null, 2)}
 
 
     ## CONVERSATION STATE
     ${
       isFirstQuestion
-        ? "This is the START of a new conversation. Introduce yourself briefly and ask the first question (based on 'question's order')."
+        ? "This is the START of a new conversation. Introduce yourself briefly and ask for users name then the first question (based on 'question's order')."
         : "This is a CONTINUING conversation. From ## RecentQuestion , and ## USER's Latest Response  determine the current question from the from , evaluate the user's response, and proceed accordingly Review the last message in MESSAGES and it's role to determine the conversation state.If ## RecentQuestion and ## RecentQuestion  are not present Review the conversation history , Review the last message in MESSAGES and it's role to determine the conversation state recent assistant question , user latest response to determine the current question from the from , evaluate the user's response, and proceed accordingly."
     }
 
@@ -169,9 +169,12 @@ export function generateChatPrompt(
     ${conversationId}
     
     ## INSTRUCTIONS
-    1. Respond in a ${form.tone || "neutral"}, conversational manner.
+
+    1. Always ask for the users name (or email if specified in the form as a part of the question)
+
+    2. Respond in a ${form.tone || "neutral"}, conversational manner.
     
-    2. Based on the conversation context:
+    3. Based on the conversation context:
        - Determine which question the user is currently answering
        - Validate their answer against that question's requirements
        - If valid, move to the next question automatically
@@ -180,23 +183,81 @@ export function generateChatPrompt(
        - If all questions are answered, thank the user for completing the form
     
  
-    
     4. Keep your responses short concise and focused on guiding the user through the form .
 
-    5. IMPORTANT: If recent question was the last QUESTION in the form and the user's answer is VALID:
+  `;
+}
+export function generateToolCallingPromptForChat(
+  conversationId: string,
+  form: Form,
+  recentQuestion: string,
+  conversationMessages?: ConversationMessage[],
+  userResponse?: string,
+  formResponseId?: string
+) {
+  const isFirstQuestion =
+    !conversationMessages || conversationMessages.length === 0;
+
+  return `
+    You are an assistant tasked with evaluating user responses for the "${
+      form.title
+    }" form and invoking appropriate tools based on the conversation context. Your response MUST be a JSON object specifying a tool call or an empty object if no tool call is needed.
+
+    ## FORM DETAILS
+    ${JSON.stringify(form, null, 2)}
+
+    ## CONVERSATION STATE
+    ${
+      isFirstQuestion
+        ? "This is the START of a new conversation. No tool calls are expected for the first question."
+        : "This is a CONTINUING conversation. From ## RecentQuestion and ## User's Latest Response, determine the current question from the form and evaluate the user's response. If ## RecentQuestion or ## User's Latest Response are not present, review the conversation history and the last message in MESSAGES to determine the conversation state and current question."
+    }
+
+    ${
+      recentQuestion
+        ? `## RecentQuestion
+        User has responded to this recent question by the assistant: ${recentQuestion}`
+        : ""
+    }
+    ${
+      formResponseId
+        ? `## FormResponseId
+        User is currently responding to form with formResponseId: ${formResponseId}`
+        : ""
+    }
+    ${
+      userResponse
+        ? `## User's Latest Response
+        User's latest response: "${userResponse}"`
+        : ""
+    }
+    ${
+      conversationMessages?.length
+        ? `## CONVERSATION HISTORY
+        ${JSON.stringify(conversationMessages, null, 2)}`
+        : "No previous messages."
+    }
+
+    ## CONVERSATION METADATA
+    Conversation ID: ${conversationId}
+
+    ## INSTRUCTIONS
+    1. Analyze the conversation context to determine the current question and validate the user's response against the question's requirements (e.g., required fields, format).
+
+    2. IMPORTANT: If recent question was the last QUESTION in the form and the user's answer is VALID:
        a. Call the formCompletionTool tool with these parameters:
           - conversationId: "${conversationId}"
           - isValid: true
           - userId: ${form.userId}
     
-    6. IMPORTANT: If user has given his Name or Email in any of the answer for the question:
+    3. IMPORTANT: If user has given his Name or Email in any of the answer for the question:
        a. Call the updateFormResponse tool with these parameters:
           - conversationId: "${conversationId}"
           - name: name provided by user in the answer
           - email: email provided by user in the answer
       
 
-    7. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
+    4. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
          - formResponseId = ${formResponseId},
          - questionId = Determine Question ID  from the questions present in the form ${
            form.questions
