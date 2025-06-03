@@ -6,8 +6,9 @@ import {
   SUGGEST_QUESTION_PROMPT,
   generateSuggestQuestionPrompt,
 } from "@/utils/prompts.js";
-import { AIService } from "./aiService.js";
+
 import { FormService } from "./formService.js";
+import { GrokService } from "./grokChatService.js";
 
 export interface QuestionCreateDTO {
   text: string;
@@ -134,7 +135,8 @@ export class QuestionService {
   async suggestQuestion(formId: string): Promise<QuestionCreateDTO> {
     try {
       // Initialize the AI service
-      const aiService = new AIService();
+
+      const grokService = new GrokService()
       const formService = new FormService();
 
       // Get the form and existing questions
@@ -148,15 +150,16 @@ export class QuestionService {
       // Create a prompt that includes context about the form and existing questions
       const prompt = generateSuggestQuestionPrompt(form, existingQuestions);
 
-      // Generate the question using AI
-      const { response } = await aiService.generateText({
-        prompt,
-        systemPrompt: SUGGEST_QUESTION_PROMPT,
-        temperature: 0.7,
-        maxTokens: 1000,
-        format: "json",
-      });
 
+      const response = await grokService.generateText({
+        messages: [
+          {
+            role: "system",
+            content: SUGGEST_QUESTION_PROMPT,
+          },
+          { role: "user", content: prompt },
+        ],
+      });
       // Parse the AI-generated question
       let questionData;
       try {
