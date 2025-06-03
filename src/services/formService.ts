@@ -12,6 +12,7 @@ import { QuestionService } from "./questionService.js";
 
 import { FormResponseService } from "./formResponseService.js";
 import { ConversationService } from "./conversationService.js";
+import { GrokService } from "./grokChatService.js";
 
 export interface FormCreate {
   userPrompt: string;
@@ -41,6 +42,7 @@ export class FormService {
   private questionService: QuestionService;
   private formResponseService: FormResponseService;
   private conversationService: ConversationService;
+  private grokChatService: GrokService;
 
   constructor() {
     this.formRepository = new FormRepository();
@@ -48,6 +50,7 @@ export class FormService {
     this.questionService = new QuestionService();
     this.conversationService = new ConversationService();
     this.formResponseService = new FormResponseService();
+    this.grokChatService = new GrokService();
   }
 
   async getAllForms(userId: string): Promise<Form[]> {
@@ -64,12 +67,22 @@ export class FormService {
   ): Promise<Form> {
     try {
       // Generate the form content using the AI service
-      const { response } = await this.aiService.generateText({
-        prompt: promptData.userPrompt,
-        systemPrompt: CREATE_FORM_PROMPT,
-        temperature: 0.7,
-        maxTokens: 4000,
-        format: "json",
+      // const { response } = await this.aiService.generateText({
+      //   prompt: promptData.userPrompt,
+      //   systemPrompt: CREATE_FORM_PROMPT,
+      //   temperature: 0.7,
+      //   maxTokens: 4000,
+      //   format: "json",
+      // });
+      // using grok service to generate for as it is  faster 
+      const response = await this.grokChatService.generateText({
+        messages: [
+          {
+            role: "system",
+            content: CREATE_FORM_PROMPT,
+          },
+          { role: "user", content: promptData.userPrompt },
+        ],
       });
       console.log(response, "geenrated");
       // Parse the AI-generated form
