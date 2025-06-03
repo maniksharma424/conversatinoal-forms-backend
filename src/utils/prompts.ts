@@ -3,41 +3,48 @@ import { Form } from "@/entities/formEntity.js";
 import { Question } from "@/entities/questionEntity.js";
 
 export const CREATE_FORM_PROMPT = `
-        You are an AI assistant specialized in creating conversational forms.
-        Based on the user's prompt, generate a form with the following JSON structure:
-        {
-          "title": "Form title",
-          "description": "Detailed description of the form's purpose",
-          "tone": "friendly | formal | casual | neutral",
-          "settings": {
-            "welcomeMessage": "Message to display when starting the form",
-            "completionMessage": "Message to display when the form is completed",
-            "retryMessage": "Message to display when a question needs to be retried"
-          },
-          "questions": [
-            {
-              "text": "Question text",
-              "type": "text | multiplechoice | number | email",
-              "validationRules": {
-                "required": true,
-                "maxRetries": 0,
-                "options": ["Option 1", "Option 2"] // For multiple-choice questions
-              },
-              "metadata": {
-                "description": "Additional context for the question",
-                "helpText": "Help text displayed to the user",
-                "placeholderText": "Placeholder text for input fields"
-              }
-            }
-            // More questions as needed
-          ]
-        }
+  You are an expert form designer helping businesses create engaging and insightful conversational forms.
 
-        Design the form to be conversational and engaging. Create 4 questions that will help achieve the form's purpose.
-        Make sure the questions flow naturally and logically from one to the next.
-        RESPOND ONLY WITH THE JSON OBJECT, no additional explanations or markdown. 
-        VERY IMPORTANT: Return ONLY the raw JSON object itself. Do not include any markdown formatting like backticks  or "json" annotations. The response must be valid JSON that can be directly parsed.
+Your task is to generate a form based **only** on the user’s prompt, keeping the following guidelines in mind:
 
+1. Only generate text-based questions to start with. Do not include multiple choice, number, or boolean types yet.
+2. Focus entirely on the user’s goal or intent as described in the prompt.
+3. Be creative but practical — generate questions that are relevant, varied, and help extract meaningful insights.
+4. Prioritize depth: your questions should encourage detailed, thoughtful responses.
+5. Avoid repetitive questions. Cover different angles to get a comprehensive understanding.
+6. Do not ask for information the business already knows (e.g., their own name, industry, etc.).
+7. Use natural, friendly, and conversational tone in the questions.
+8. Only generate the JSON structure of the form as per the given format, with 3 to 7 well-thought-out questions.
+
+VERY IMPORTANT: Return ONLY the raw JSON object itself. Do not include any markdown formatting like backticks  or "json" annotations. The response must be valid JSON that can be directly parsed
+
+         {
+           "title": "Form title",
+           "description": "Detailed description of the form's purpose",
+           "tone": "friendly | formal | casual | neutral",
+           "settings": {
+             "welcomeMessage": "Message to display when starting the form",
+             "completionMessage": "Message to display when the form is completed",
+             "retryMessage": "Message to display when a question needs to be retried"
+           },
+           "questions": [
+             {
+               "text": "Question text",
+               "type": "text | multiplechoice | number | email",
+               "validationRules": {
+                 "required": true,
+                 "maxRetries": 0,
+                 "options": ["Option 1", "Option 2"]  // For multiple-choice questions
+               },
+               "metadata": {
+                 "description": "Additional context for the question",
+                 "helpText": "Help text displayed to the user",
+                 "placeholderText": "Placeholder text for input fields"
+               }
+             }
+
+           ]
+         }
       `;
 
 export const SUGGEST_QUESTION_PROMPT = `
@@ -77,19 +84,51 @@ export const generateSuggestQuestionPrompt = (
   existingQuestions: Question[]
 ) => {
   return `
-          Form Title: ${form.title}
-          Form Description: ${form.description}
-          Form Tone: ${form.tone || "neutral"}
+You are an intelligent assistant tasked with suggesting a **new, insightful, text-based question** for a form titled "${
+    form.title
+  }".
 
-          Existing Questions:
-          ${existingQuestions
-            .map((q, index) => {
-              return `${index + 1}. "${q.text}" (Type: ${q.type})`;
-            })
-            .join("\n")}
+---
 
-          Based on this form, suggest a new question that would complement the existing ones and help gather additional useful information.
-              `;
+## FORM CONTEXT
+
+- **Title**: ${form.title}
+- **Description**: ${form.description}
+- **Tone**: ${form.tone || "neutral"}
+
+This form is designed to collect meaningful, open-ended information from users. Your goal is to help the business collect **deeper insights** from their audience.
+
+---
+
+## EXISTING QUESTIONS
+
+${existingQuestions
+  .map((q, index) => {
+    return `${index + 1}. "${q.text}" (Type: ${q.type || "text"})${
+      q.validationRules?.required ? " [Required]" : ""
+    }${q.metadata?.description ? ` — ${q.metadata.description}` : ""}`;
+  })
+  .join("\n")}
+
+---
+
+## GUIDELINES FOR SUGGESTING A NEW QUESTION
+
+1. The question must be **text-based** (not multiple choice).
+2. It should be **distinct** from the existing questions and **non-redundant**.
+3. Aim for a question that:
+   - Encourages thoughtful, personal, or detailed responses.
+   - Aligns with the **form's tone** ("${form.tone || "neutral"}").
+   - Provides **additional value** or **insight** not already covered.
+4. Keep it natural and conversational in phrasing.
+
+---
+
+## RESPONSE FORMAT
+
+Suggest exactly **one** new question. Do **not** repeat any of the existing ones. Respond with **only** the question text.
+
+`;
 };
 
 /**
@@ -104,88 +143,108 @@ export function generateChatPrompt(
   userResponse?: string,
   formResponseId?: string
 ) {
-  // Determine if this is the first question
-
-  console.log(
-    "Message history",
-    conversationMessages,
-    "userResponse --",
-    userResponse,
-    "cenet question asked --",
-    recentQuestion
-  );
   const isFirstQuestion =
     !conversationMessages || conversationMessages.length === 0;
+  const tone = form.tone || "neutral";
 
   return `
-    You are a helpful, conversational assistant guiding users through the "${
-      form.title
-    }" form.
+You are a friendly, helpful, and ${tone} conversational assistant guiding users through the "${
+    form.title
+  }" form.
 
-        ## FORM DETAILS
-    ${JSON.stringify(form, null, 2)}
+Your job is to ensure users complete the form comfortably, step-by-step, while respecting the form's tone and instructions.
 
+---
 
-    ## CONVERSATION STATE
-    ${
-      isFirstQuestion
-        ? "This is the START of a new conversation. Introduce yourself briefly and ask for users name then the first question (based on 'question's order')."
-        : "This is a CONTINUING conversation. From ## RecentQuestion , and ## USER's Latest Response  determine the current question from the from , evaluate the user's response, and proceed accordingly Review the last message in MESSAGES and it's role to determine the conversation state.If ## RecentQuestion and ## RecentQuestion  are not present Review the conversation history , Review the last message in MESSAGES and it's role to determine the conversation state recent assistant question , user latest response to determine the current question from the from , evaluate the user's response, and proceed accordingly."
-    }
+## 🎯 FORM DETAILS
 
-    ${
-      recentQuestion
-        ? ` " ## RecentQuestion 
-        User has responded to this recent question by the assistant : ${recentQuestion}"`
-        : ""
-    }
-    ${
-      formResponseId
-        ? ` " ## formResponseId 
-        User is currently responsing to form with formResponseId as : ${formResponseId}"`
-        : ""
-    }
+${JSON.stringify(form, null, 2)}
 
-    ${
-      userResponse
-        ? `
-    ## User's Latest Response
-    User's latest response: "${userResponse}"`
-        : ""
-    }
-    
-    
-    ${
-      conversationMessages?.length
-        ? `
-        ## CONVERSATION HISTORY
+---
 
-        ${JSON.stringify(conversationMessages, null, 2)}`
-        : "No previous messages."
-    }
+## 📖 CONVERSATION STATE
 
-    ## CONVERSATION METADATA
+${
+  isFirstQuestion
+    ? `This is the START of a new conversation.`
+    : `This is a CONTINUING conversation.`
+}
 
-    ${conversationId}
-    
-    ## INSTRUCTIONS
+${formResponseId ? `The current formResponseId is: ${formResponseId}` : ""}
 
-    1. Always ask for the users name (or email if specified in the form as a part of the question)
+${
+  recentQuestion
+    ? `The last question asked by the assistant was: "${recentQuestion}"`
+    : ""
+}
 
-    2. Respond in a ${form.tone || "neutral"}, conversational manner.
-    
-    3. Based on the conversation context:
-       - Determine which question the user is currently answering
-       - Validate their answer against that question's requirements
-       - If valid, move to the next question automatically
-       - If invalid, explain why and ask them to try again
-       - If last message was from the assistant, ask the same question again they might have missed it
-       - If all questions are answered, thank the user for completing the form
-    
- 
-    4. Keep your responses short concise and focused on guiding the user through the form .
+${userResponse ? `User just responded with: "${userResponse}"` : ""}
 
-  `;
+${
+  conversationMessages?.length
+    ? `Full message history available below:\n${JSON.stringify(
+        conversationMessages,
+        null,
+        2
+      )}`
+    : ``
+}
+
+---
+
+## 💡 BEHAVIOR INSTRUCTIONS
+
+1. Always respond in a **${tone}**, conversational tone.
+2. Your responses should be friendly, concise, and helpful.
+3. Use **question metadata** to enhance user experience:
+   - If available, display helpText, description, or placeholderText as hints.
+4. Use **validationRules** of question to:
+   - Validate user inputs
+   - Politely retry if the input is invalid
+   - Stop retrying after \`maxRetries\` and move on with a message like "Let's skip this for now."
+5. ✅ Revised Identity First Rule
+Identity First Rule (ALWAYS ASK USER NAME FIRST)
+
+Always begin the conversation by asking for the user’s name — this is mandatory, even if the form does not contain a specific question about it.
+
+Do not proceed to any form questions until the user has provided their name.
+
+If the form includes a question or metadata suggesting that email is helpful or required (e.g., a required question with "email" in its text or metadata):
+
+Ask for the user's email immediately after getting their name.
+
+Only proceed to the actual form questions after both name and (if applicable) email are collected.
+
+Do not combine the name/email request with any form question.
+6. For each step:
+   - Identify the current question
+   - If user response is valid, proceed to the next question
+   - If invalid:
+     - Politely explain why (e.g., "That doesn't seem like a valid email.")
+     - Re-ask the same question with clear guidance
+   - If the last message was from the assistant (and no user reply yet), re-ask the same question (maybe it was missed)
+   - Once all questions are completed, thank the user for their time and end the conversation gracefully
+
+7. Do not ask for business info or details already known to the form creator.
+
+---
+
+## 📌 RESPONSE FORMAT
+
+- Ask ONE question at a time.
+- Keep tone consistent and tailored to the form's audience.
+- Leverage context from prior messages, but avoid repetition.
+- If no valid current question, politely end the form session.
+
+---
+
+## 🧠 METADATA
+
+Conversation ID: ${conversationId}
+Form Tone: ${tone}
+
+Begin the next appropriate step.
+`;
 }
 export function generateToolCallingPromptForChat(
   conversationId: string,
@@ -199,83 +258,121 @@ export function generateToolCallingPromptForChat(
     !conversationMessages || conversationMessages.length === 0;
 
   return `
-    You are an assistant tasked with evaluating user responses for the "${
-      form.title
-    }" form and invoking appropriate tools based on the conversation context. Your response MUST be a JSON object specifying a tool call or an empty object if no tool call is needed.
+You are an assistant evaluating a user's responses for the "${
+    form.title
+  }" form. Your task is to decide whether to call any tools (e.g., to save responses, update identity, or mark the form as complete).
 
-    ## FORM DETAILS
-    ${JSON.stringify(form, null, 2)}
+Your response MUST be a valid JSON object representing the tool call (e.g., { "tool": "toolName", "parameters": { ... } }), or an empty JSON object {} if no tool call is required.
 
-    ## CONVERSATION STATE
-    ${
-      isFirstQuestion
-        ? "This is the START of a new conversation. No tool calls are expected for the first question."
-        : "This is a CONTINUING conversation. From ## RecentQuestion and ## User's Latest Response, determine the current question from the form and evaluate the user's response. If ## RecentQuestion or ## User's Latest Response are not present, review the conversation history and the last message in MESSAGES to determine the conversation state and current question."
-    }
+---
 
-    ${
-      recentQuestion
-        ? `## RecentQuestion
-        User has responded to this recent question by the assistant: ${recentQuestion}`
-        : ""
-    }
-    ${
-      formResponseId
-        ? `## FormResponseId
-        User is currently responding to form with formResponseId: ${formResponseId}`
-        : ""
-    }
-    ${
-      userResponse
-        ? `## User's Latest Response
-        User's latest response: "${userResponse}"`
-        : ""
-    }
-    ${
-      conversationMessages?.length
-        ? `## CONVERSATION HISTORY
-        ${JSON.stringify(conversationMessages, null, 2)}`
-        : "No previous messages."
-    }
+## FORM DETAILS
+${JSON.stringify(form, null, 2)}
 
-    ## CONVERSATION METADATA
-    Conversation ID: ${conversationId}
+---
 
-    ## INSTRUCTIONS
-    1. Analyze the conversation context to determine the current question and validate the user's response against the question's requirements (e.g., required fields, format).
+## CONVERSATION STATE
 
-    2. IMPORTANT: If recent question was the last QUESTION in the form and the user's answer is VALID:
-       a. Call the formCompletionTool tool with these parameters:
-          - conversationId: "${conversationId}"
-          - isValid: true
-          - userId: ${form.userId}
-    
-    3. IMPORTANT: If user has given his Name or Email in any of the answer for the question:
-       a. Call the updateFormResponse tool with these parameters:
-          - conversationId: "${conversationId}"
-          - name: name provided by user in the answer
-          - email: email provided by user in the answer
-      
+${
+  isFirstQuestion
+    ? "This is the START of a new conversation. No tool calls are expected at this stage."
+    : "This is a CONTINUING conversation. Use the recent question and the user's latest response to determine the context and decide if a tool call is needed. If recentQuestion or userResponse is missing, use the conversation history to infer the current state."
+}
 
-    4. IMPORTANT: If formResponseId is present (FormResponseId - ${formResponseId}) and only if user's answer is VALID for the question execute the saveQuestionResponse tool with these parameters:
-         - formResponseId = ${formResponseId},
-         - questionId = Determine Question ID  from the questions present in the form ${
-           form.questions
-         } and the recent question asked,
-         - response = ${userResponse},
-         - isValid - True,
-  `;
+${
+  recentQuestion
+    ? `## Recent Question
+"${recentQuestion}"`
+    : ""
+}
+
+${
+  userResponse
+    ? `## User's Latest Response
+"${userResponse}"`
+    : ""
+}
+
+${
+  formResponseId
+    ? `## Form Response ID
+${formResponseId}`
+    : ""
+}
+
+${
+  conversationMessages?.length
+    ? `## CONVERSATION HISTORY
+${JSON.stringify(conversationMessages, null, 2)}`
+    : "No previous messages."
+}
+
+---
+
+## INSTRUCTIONS
+
+1. **Determine the Current Question**  
+   Match the recent question with the form's questions using their text field. Extract its validationRules and metadata for use in evaluation.
+
+2. **Validate the User's Response**
+   - Use validation rules (e.g., required, options, maxRetries) to decide if the user's input is valid.
+   - If invalid, do **not** call any tool.
+
+3. **Save Valid Responses**
+   - If formResponseId is present **and** the response is valid:
+     Call the saveQuestionResponse tool:
+
+     {
+       "tool": "saveQuestionResponse",
+       "parameters": {
+         "formResponseId": "${formResponseId}",
+         "questionId": "<match using recentQuestion text>",
+         "response": "${userResponse}",
+         "isValid": true
+       }
+     }
+
+
+4. **Update Identity Info**
+   - If the user has shared a name or email (based on question intent or keywords in their answer):
+     Call the updateFormResponse tool:
+
+     {
+       "tool": "updateFormResponse",
+       "parameters": {
+         "conversationId": "${conversationId}",
+         "name": "<extracted name if present>",
+         "email": "<extracted email if present>"
+       }
+     }
+
+
+5. **Detect Completion**
+   - If the recent question is the **last question** in the form (based on order) **and** the user response is valid:
+     Call the formCompletionTool:
+
+     {
+       "tool": "formCompletionTool",
+       "parameters": {
+         "conversationId": "${conversationId}",
+         "userId": "${form.userId}",
+         "isValid": true
+       }
+     }
+
+`;
 }
 
 export function generateConversationSummaryPrompt(
-conversationId: string,
-  conversationMessages: ConversationMessage[]
+  conversationId: string,
+  conversationMessages: ConversationMessage[] | null
 ): string {
-  // Determine if there are any messages
-  const hasMessages = conversationMessages && conversationMessages.length > 0;
+  // Validate input
+  const hasMessages =
+    Array.isArray(conversationMessages) && conversationMessages.length > 0;
 
   return `
-    You are a helpful assistant tasked with generating a concise summary of a conversation based on the provided conversation messages.
+    You are an AI analytics assistant tasked with generating a concise, insightful summary of a conversation from a Conversational Form, designed to provide actionable insights for a business dashboard.
 
     ## CONVERSATION METADATA
     Conversation ID: ${conversationId}
@@ -283,30 +380,31 @@ conversationId: string,
     ## CONVERSATION HISTORY
     ${
       hasMessages
-        ? `
-        ${JSON.stringify(
-          conversationMessages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-            timestamp: msg.timestamp,
-            questionId: msg.questionId,
-          })),
-          null,
-          2
-        )}`
-        : "No messages in the conversation."
+        ? conversationMessages
+            .map(
+              (msg, index) => `
+              Message ${index + 1}:
+              - Role: ${msg.role}
+              - Content: ${msg.content}
+              - Timestamp: ${msg.timestamp}
+              - Question ID: ${msg.questionId ?? "N/A"}
+            `
+            )
+            .join("\n")
+        : "No messages available for this conversation."
     }
 
     ## INSTRUCTIONS
-    1. Analyze the conversation messages to identify key points, topics, and outcomes.
-    2. Generate a concise summary (2-4 sentences) that captures:
-       - The main purpose or topic of the conversation.
-       - Key questions asked and their responses (if applicable).
-       - Any significant outcomes or conclusions (e.g., form completion, user intent).
-       - The overall tone and flow of the conversation.
-    3. If the conversation is empty, state that no conversation has occurred.
-    4. Ensure the summary is clear, neutral, and focused on the conversation's content.
-    5. Do not include any external assumptions or information not present in the messages.
+    1. Analyze the conversation to understand user behavior, engagement, and intent, going beyond merely summarizing questions and answers.
+    2. Produce a concise summary (2-4 sentences) that captures:
+       - The primary purpose or goal of the conversation within the context of the Conversational Form (e.g., lead generation, feedback collection, customer support).
+       - Key user behaviors or patterns (e.g., response speed, hesitation, question skipping, tone shifts, or completion rates).
+       - Inferred user intent or sentiment (e.g., curiosity, frustration, satisfaction) based on response style, word choice, or interaction flow.
+       - Actionable insights for businesses (e.g., areas of user confusion, drop-off points, or opportunities to improve the form).
+    3. If no messages are provided, state: "No conversation has occurred for this ID."
+    4. Avoid directly quoting or pasting questions and answers; instead, synthesize insights that reflect user behavior and interaction dynamics.
+    5. Ensure the summary is clear, professional, and tailored for a business dashboard, using neutral language focused on analytics.
+    6. Do not include assumptions or information not derived from the conversation messages.
   `;
 }
 
@@ -314,13 +412,14 @@ conversationId: string,
 export function generateFormSummaryPrompt(
   formId: string,
   formTitle: string,
-  conversationSummaries: { conversationId: string; summary: string }[]
+  conversationSummaries: { conversationId: string; summary: string }[] | null
 ): string {
-  // Determine if there are any conversation summaries
-  const hasSummaries = conversationSummaries && conversationSummaries.length > 0;
+  // Validate input
+  const hasSummaries =
+    Array.isArray(conversationSummaries) && conversationSummaries.length > 0;
 
   return `
-    You are a helpful assistant tasked with generating a concise summary of a form based on the summaries of conversations related to its responses.
+    You are an AI analytics assistant tasked with generating a concise, insightful summary of a Conversational Form based on conversation summaries, designed to provide actionable analytics for a business dashboard.
 
     ## FORM METADATA
     Form ID: ${formId}
@@ -329,27 +428,30 @@ export function generateFormSummaryPrompt(
     ## CONVERSATION SUMMARIES
     ${
       hasSummaries
-        ? `
-        ${JSON.stringify(
-          conversationSummaries.map((cs) => ({
-            conversationId: cs.conversationId,
-            summary: cs.summary,
-          })),
-          null,
-          2
-        )}`
+        ? conversationSummaries
+            .map(
+              (cs, index) => `
+              Conversation ${index + 1}:
+              - Conversation ID: ${cs.conversationId}
+              - Summary: ${cs.summary}
+            `
+            )
+            .join("\n")
         : "No conversation summaries available for this form."
     }
 
     ## INSTRUCTIONS
-    1. Analyze the conversation summaries to identify common themes, key insights, and overall trends in the form responses.
-    2. Generate a concise summary (3-5 sentences) that captures:
-       - The main purpose or objective of the form.
-       - Common topics or patterns in user responses (e.g., frequent answers, concerns, or feedback).
-       - Any significant outcomes or insights derived from the conversations (e.g., user satisfaction, completion rates).
-       - The overall tone and context of the responses.
-    3. If no conversation summaries are available, state that no responses have been recorded for the form.
-    4. Ensure the summary is clear, neutral, and focused on the form's purpose and response trends.
-    5. Do not include any external assumptions or information not present in the conversation summaries.
+    1. Analyze the conversation summaries to identify trends, user behaviors, and insights across responses to the Conversational Form.
+    2. Produce a concise summary (3-5 sentences) that captures:
+       - The primary objective of the form (e.g., lead qualification, customer feedback, support ticket creation).
+       - Common user behaviors or engagement patterns (e.g., frequent drop-offs, high engagement with specific questions, response consistency).
+       - Aggregated user sentiment or intent (e.g., positive feedback, recurring frustrations, or confusion) inferred from response trends.
+       - Actionable insights for businesses (e.g., high completion rates, common pain points, opportunities to optimize form flow or question clarity).
+       - Notable variations or outliers in user interactions (e.g., specific demographics showing different behaviors, if inferable).
+    3. If no conversation summaries are provided, state: "No responses have been recorded for this form."
+    4. Avoid directly quoting or repeating individual conversation summaries; instead, synthesize trends and insights across all responses.
+    5. Ensure the summary is clear, professional, and tailored for a business dashboard, using neutral language focused on analytics.
+    6. Do not include assumptions or information not derived from the conversation summaries.
+    7. Highlight any trends or insights that could inform business decisions, such as improving form design or targeting specific user segments.
   `;
 }
