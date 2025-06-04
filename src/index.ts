@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/data-source.js";
 
+import rateLimit from 'express-rate-limit'; // Added for rate limiting
+
 import formRoutes, { publicFormRoutes } from "./routes/formRoutes.js";
 import { ENV } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -19,6 +21,30 @@ import productRoutes from "./routes/productRoutes.js";
 // Initialize Express app
 const app = express();
 const PORT = ENV.PORT || "3000";
+
+// Rate limiting middleware with in-memory store
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 50, // Limit each IP to 50 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    success: false,
+    message: "Too many requests, please try again later.",
+  },
+  keyGenerator: (req: Request): string => {
+    // Use X-Forwarded-For header for IP behind proxies (e.g., AWS ELB)
+    const forwardedFor = req.headers["x-forwarded-for"];
+    const ipFromHeader = Array.isArray(forwardedFor)
+      ? forwardedFor[0]
+      : forwardedFor;
+    return ipFromHeader?.toString() || req.ip || "unknown";
+  },
+});
+
+// Apply rate limiter to all API routes
+app.use('/api/v1', limiter);
+
 
 // Middleware
 const corsOptions = {
