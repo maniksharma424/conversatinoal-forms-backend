@@ -85,7 +85,7 @@ export class ConversationService {
       let fullMessage = ""; // Variable to collect the complete message
       // Get form data (common to both cases)
       form = await this.getFormWithCache(formId);
-
+      const isDraftForm = form?.isPublished === false;
       // CASE 1: Starting a new conversation (no conversationId provided)
       if (!conversationId) {
         // check if form owner has balance for new conversation
@@ -187,22 +187,23 @@ export class ConversationService {
           conversation?.formResponse?.id
         );
       }
-      // service to execute tools in background
-      const response = this.aiService.generateText({
-        prompt: chatPrompt,
-        systemPrompt:
-          "You are a helpful, conversational assistant reviewing user's responses for forms and executing available tools  ",
-        maxSteps: 2, // Allow one tool call plus a final response
-        tools: {
-          completeForm: this.createConversationTools().formCompletionTool,
-          saveQuestionResponse:
-            this.createConversationTools().saveQuestionResponseTool,
-          updateFormResponse:
-            this.createConversationTools().updateFormResponseTool,
-        },
-        toolChoice: "auto", // Let the model decide when to call the tool
-      });
-
+      // service to execute tools in background only for non-draft forms (publisjed forms)
+      if (!isDraftForm) {
+        const response = this.aiService.generateText({
+          prompt: chatPrompt,
+          systemPrompt:
+            "You are a helpful, conversational assistant reviewing user's responses for forms and executing available tools  ",
+          maxSteps: 2, // Allow one tool call plus a final response
+          tools: {
+            completeForm: this.createConversationTools().formCompletionTool,
+            saveQuestionResponse:
+              this.createConversationTools().saveQuestionResponseTool,
+            updateFormResponse:
+              this.createConversationTools().updateFormResponseTool,
+          },
+          toolChoice: "auto", // Let the model decide when to call the tool
+        });
+      }
       // chat service to faster responses
       const { textStream } = this.grokChatService.generateStreamText({
         messages: [

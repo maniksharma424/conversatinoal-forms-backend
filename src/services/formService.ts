@@ -73,7 +73,7 @@ export class FormService {
       //   maxTokens: 4000,
       //   format: "json",
       // });
-      // using grok service to generate for as it is  faster 
+      // using grok service to generate for as it is  faster
       const response = await this.grokChatService.generateText({
         messages: [
           {
@@ -152,6 +152,10 @@ export class FormService {
     try {
       // Fetch all form responses for the form
       const form = await this.formRepository.findById(formId);
+      const isDraftForm = form?.isPublished === false;
+      if (isDraftForm) {
+        return null; // Skip summary generation for draft forms
+      }
       const formResponses = await this.formResponseService.getResponsesByForm(
         formId
       );
