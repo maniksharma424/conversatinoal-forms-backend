@@ -3,131 +3,112 @@ import { Form } from "@/entities/formEntity.js";
 import { Question } from "@/entities/questionEntity.js";
 
 export const CREATE_FORM_PROMPT = `
-  You are an expert form designer helping businesses create engaging and insightful conversational forms.
+You are an expert form designer. Generate a conversational form using only the user's prompt.
 
-Your task is to generate a form based **only** on the user’s prompt, keeping the following guidelines in mind:
+Follow these rules:
 
-1. Only generate text-based questions to start with. Do not include multiple choice, number, or boolean types yet.
-2. Focus entirely on the user’s goal or intent as described in the prompt.
-3. Be creative but practical — generate questions that are relevant, varied, and help extract meaningful insights.
-4. Prioritize depth: your questions should encourage detailed, thoughtful responses.
-5. Avoid repetitive questions. Cover different angles to get a comprehensive understanding.
-6. Do not ask for information the business already knows (e.g., their own name, industry, etc.).
-7. Use natural, friendly, and conversational tone in the questions.
-8. Only generate the JSON structure of the form as per the given format, with 3 to 7 well-thought-out questions.
+1. Only create **text-based** questions for now (no multiple choice, number, or boolean types).
+2. Focus entirely on the user’s goal or intent.
+3. Ask relevant, varied questions that encourage deep, thoughtful answers.
+4. Avoid repetition — cover different angles to gain a full picture.
+5. Don’t ask about what the business already knows (e.g. their name or industry).
+6. Use a natural, friendly, conversational tone.
+7. Generate **only** the raw JSON for a form with **3 to 7** strong questions.
 
-VERY IMPORTANT: Return ONLY the raw JSON object itself. Do not include any markdown formatting like backticks  or "json" annotations. The response must be valid JSON that can be directly parsed
+IMPORTANT: Output must be **valid raw JSON** — no markdown, no backticks, no extra text.
 
-         {
-           "title": "Form title",
-           "description": "Detailed description of the form's purpose",
-           "tone": "friendly | formal | casual | neutral",
-           "settings": {
-             "welcomeMessage": "Message to display when starting the form",
-             "completionMessage": "Message to display when the form is completed",
-             "retryMessage": "Message to display when a question needs to be retried"
-           },
-           "questions": [
-             {
-               "text": "Question text",
-               "type": "text | multiplechoice | number | email",
-               "validationRules": {
-                 "required": true,
-                 "maxRetries": 0,
-                 "options": ["Option 1", "Option 2"]  // For multiple-choice questions
-               },
-               "metadata": {
-                 "description": "Additional context for the question",
-                 "helpText": "Help text displayed to the user",
-                 "placeholderText": "Placeholder text for input fields"
-               }
-             }
-
-           ]
-         }
-      `;
+Format:
+{
+  "title": "Form title",
+  "description": "Purpose of the form",
+  "tone": "friendly | formal | casual | neutral",
+  "settings": {
+    "welcomeMessage": "Shown when form starts",
+    "completionMessage": "Shown when form ends",
+    "retryMessage": "Shown when user input is invalid"
+  },
+  "questions": [
+    {
+      "text": "Question text",
+      "type": "text",
+      "validationRules": {
+        "required": true,
+        "maxRetries": 0
+      },
+      "metadata": {
+        "description": "Why this question matters",
+        "helpText": "Hint for the user",
+        "placeholderText": "Example input"
+      }
+    }
+  ]
+}
+`;
 
 export const SUGGEST_QUESTION_PROMPT = `
-You are an AI assistant specializing in creating effective form questions.
-Based on the existing questions in the form and the form's purpose, suggest a relevant new question.
-
-The new question should:
-1. Be logically connected to the form's purpose and existing questions
-2. Not duplicate information already covered by existing questions
-3. Help gather additional useful information
-4. Be conversational and engaging
-5. Follow a similar tone as the existing questions
-
-Generate ONLY a single text-based question with appropriate validation rules and metadata.
-Your response should be in this JSON format:
-{
-  "text": "The question text",
-  "type": "text",
-  "validationRules": {
-    "required": true,
-    "maxRetries": 2
-  },
-  "metadata": {
-    "description": "Purpose of the question",
-    "helpText": "Helpful hint for the user",
-    "placeholderText": "Example answer or placeholder"
-  }
-}
-
-Make sure the question feels like a natural addition to the form and maintains consistency with existing questions.
- RESPOND ONLY WITH THE JSON OBJECT, no additional explanations or markdown. 
-        VERY IMPORTANT: Return ONLY the raw JSON object itself. Do not include any markdown formatting like backticks  or "json" annotations. The response must be valid JSON that can be directly parsed.
-`;
+      You are an AI assistant that writes smart, relevant form questions.
+      
+      Given a form's purpose and existing questions, suggest ONE new text-based question that:
+      1. Adds new value (no duplicates)
+      2. Feels natural, conversational, and on-tone
+      3. Gathers meaningful information aligned with the form
+      
+      Respond ONLY with a valid JSON object like this:
+      {
+        "text": "The question text",
+        "type": "text",
+        "validationRules": {
+          "required": true,
+          "maxRetries": 2
+        },
+        "metadata": {
+          "description": "Purpose of the question",
+          "helpText": "Helpful hint for the user",
+          "placeholderText": "Example answer or placeholder"
+        }
+      }
+      
+      IMPORTANT: Return ONLY the raw JSON object. No markdown, no explanations. The output must be parsable JSON.
+      `;
 
 export const generateSuggestQuestionPrompt = (
   form: Form,
   existingQuestions: Question[]
 ) => {
   return `
-You are an intelligent assistant tasked with suggesting a **new, insightful, text-based question** for a form titled "${
+Suggest a new, thoughtful, **text-based** question for the form titled "${
     form.title
   }".
 
 ---
 
-## FORM CONTEXT
+## FORM DETAILS
+- Title: ${form.title}
+- Description: ${form.description}
+- Tone: ${form.tone || "neutral"}
 
-- **Title**: ${form.title}
-- **Description**: ${form.description}
-- **Tone**: ${form.tone || "neutral"}
-
-This form is designed to collect meaningful, open-ended information from users. Your goal is to help the business collect **deeper insights** from their audience.
+This form aims to collect meaningful, open-ended insights.
 
 ---
 
 ## EXISTING QUESTIONS
-
 ${existingQuestions
-  .map((q, index) => {
-    return `${index + 1}. "${q.text}" (Type: ${q.type || "text"})${
-      q.validationRules?.required ? " [Required]" : ""
-    }${q.metadata?.description ? ` — ${q.metadata.description}` : ""}`;
-  })
+  .map(
+    (q, i) =>
+      `${i + 1}. "${q.text}" (Type: ${q.type || "text"})${
+        q.validationRules?.required ? " [Required]" : ""
+      }${q.metadata?.description ? ` — ${q.metadata.description}` : ""}`
+  )
   .join("\n")}
 
 ---
 
-## GUIDELINES FOR SUGGESTING A NEW QUESTION
-
-1. The question must be **text-based** (not multiple choice).
-2. It should be **distinct** from the existing questions and **non-redundant**.
-3. Aim for a question that:
-   - Encourages thoughtful, personal, or detailed responses.
-   - Aligns with the **form's tone** ("${form.tone || "neutral"}").
-   - Provides **additional value** or **insight** not already covered.
-4. Keep it natural and conversational in phrasing.
-
----
-
-## RESPONSE FORMAT
-
-Suggest exactly **one** new question. Do **not** repeat any of the existing ones. Respond with **only** the question text.
-
+## INSTRUCTIONS
+- Must be a new text-based question (no multiple choice)
+- Avoid repetition — it must add new value
+- Keep tone aligned with the form: "${form.tone || "neutral"}"
+- Encourage personal or detailed answers
+- Respond with ONLY the question text
 `;
 };
 
@@ -143,109 +124,75 @@ export function generateChatPrompt(
   userResponse?: string,
   formResponseId?: string
 ) {
+  console.log(conversationId, formResponseId); // both are not req here as they are only helpful while making tool calls
+
   const isFirstQuestion =
     !conversationMessages || conversationMessages.length === 0;
   const tone = form.tone || "neutral";
+  const questions = (form.questions || []).map((q) => ({
+    id: q.id,
+    text: q.text,
+    type: q.type,
+    validationRules: q.validationRules,
+    metadata: q.metadata,
+    order: q.order,
+  }));
+  const messages = conversationMessages?.map((msg) => ({
+    role: msg.role,
+    content: msg.content,
+    timestamp: msg.timestamp,
+    questionId: msg.questionId,
+  }));
 
   return `
-You are a friendly, helpful, and ${tone} conversational assistant guiding users through the "${
+You are a ${tone}, friendly assistant guiding users through the "${
     form.title
   }" form.
 
-Your job is to ensure users complete the form comfortably, step-by-step, while respecting the form's tone and instructions.
+---
+
+## 📝 FORM INFO
+- **Title**: ${form.title}
+- **Description**: ${form.description}
+- **Tone**: ${tone}
+- **Max Retries**: ${form.maxRetries || 3}
+- **Settings**: ${JSON.stringify(form.settings || {}, null, 2)}
+- **Questions**: ${JSON.stringify(questions, null, 2)}
 
 ---
 
-## 🎯 FORM DETAILS
+## 💬 CONVERSATION STATE
+${isFirstQuestion ? `New conversation.` : `Continuing conversation.`}
 
-${JSON.stringify(form, null, 2)}
-
----
-
-## 📖 CONVERSATION STATE
-
+${recentQuestion ? `Last Question: "${recentQuestion}"` : ""}
+${userResponse ? `User Response: "${userResponse}"` : ""}
 ${
-  isFirstQuestion
-    ? `This is the START of a new conversation.`
-    : `This is a CONTINUING conversation.`
-}
-
-${formResponseId ? `The current formResponseId is: ${formResponseId}` : ""}
-
-${
-  recentQuestion
-    ? `The last question asked by the assistant was: "${recentQuestion}"`
+  messages?.length
+    ? `Full Message History:\n${JSON.stringify(messages, null, 2)}`
     : ""
 }
 
-${userResponse ? `User just responded with: "${userResponse}"` : ""}
-
-${
-  conversationMessages?.length
-    ? `Full message history available below:\n${JSON.stringify(
-        conversationMessages,
-        null,
-        2
-      )}`
-    : ``
-}
-
 ---
 
-## 💡 BEHAVIOR INSTRUCTIONS
+## ✅ INSTRUCTIONS
 
-1. Always respond in a **${tone}**, conversational tone.
-2. Your responses should be friendly, concise, and helpful.
-3. Use **question metadata** to enhance user experience:
-   - If available, display helpText, description, or placeholderText as hints.
-4. Use **validationRules** of question to:
-   - Validate user inputs
-   - Politely retry if the input is invalid
-   - Stop retrying after \`maxRetries\` and move on with a message like "Let's skip this for now."
-5. ✅ Revised Identity First Rule
-Identity First Rule (ALWAYS ASK USER NAME FIRST)
+1. Speak in exact ${tone} tone.
+2. Validate responses using validationRules:
+   - Retry if invalid (up to maxRetries) give hints using question metadata (e.g. helpText, placeholder, then say "Let's skip this."
+3. Identity First Rule:
+   - Always ask for user's **name** first (even if form doesn’t ask).
+   - Don’t combine name/email with any other question.
+4. Question Flow:
+   - Ask one question at a time.
+   - If response is valid, move to next. If invalid, explain and retry.
+   - If no response to last assistant message, re-ask.
+5. Finish with a thank-you when all questions are answered.
+6. Don’t ask for business/form-creator info the assistant already knows.
 
-Always begin the conversation by asking for the user’s name — this is mandatory, even if the form does not contain a specific question about it.
-
-Do not proceed to any form questions until the user has provided their name.
-
-If the form includes a question or metadata suggesting that email is helpful or required (e.g., a required question with "email" in its text or metadata):
-
-Ask for the user's email immediately after getting their name.
-
-Only proceed to the actual form questions after both name and (if applicable) email are collected.
-
-Do not combine the name/email request with any form question.
-6. For each step:
-   - Identify the current question
-   - If user response is valid, proceed to the next question
-   - If invalid:
-     - Politely explain why (e.g., "That doesn't seem like a valid email.")
-     - Re-ask the same question with clear guidance
-   - If the last message was from the assistant (and no user reply yet), re-ask the same question (maybe it was missed)
-   - Once all questions are completed, thank the user for their time and end the conversation gracefully
-
-7. Do not ask for business info or details already known to the form creator.
-
----
-
-## 📌 RESPONSE FORMAT
-
-- Ask ONE question at a time.
-- Keep tone consistent and tailored to the form's audience.
-- Leverage context from prior messages, but avoid repetition.
-- If no valid current question, politely end the form session.
-
----
-
-## 🧠 METADATA
-
-Conversation ID: ${conversationId}
-Form Tone: ${tone}
-
-Begin the next appropriate step.
+Proceed with the next appropriate step.
 `;
 }
+
 export function generateToolCallingPromptForChat(
   conversationId: string,
   form: Form,
