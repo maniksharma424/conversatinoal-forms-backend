@@ -3,19 +3,17 @@ import { Form } from "@/entities/formEntity.js";
 import { Question } from "@/entities/questionEntity.js";
 
 export const CREATE_FORM_PROMPT = `
-You are an expert form designer. Generate a conversational form using only the user's prompt.
+You are an expert form designer. Create a conversational form using only the user's prompt.
 
 Follow these rules:
 
-1. Only create **text-based** questions for now (no multiple choice, number, or boolean types).
-2. Focus entirely on the user’s goal or intent.
-3. Ask relevant, varied questions that encourage deep, thoughtful answers.
-4. Avoid repetition — cover different angles to gain a full picture.
-5. Don’t ask about what the business already knows (e.g. their name or industry).
-6. Use a natural, friendly, conversational tone.
-7. Generate **only** the raw JSON for a form with **3 to 7** strong questions.
-
-IMPORTANT: Output must be **valid raw JSON** — no markdown, no backticks, no extra text.
+1. Generate only **text-based** questions for now (no multiple choice, number, or boolean types).
+2. Treat each question as a **topic** or **theme**, not a full question. Keep it short (3–6 words max).
+3. Focus entirely on the user's goal or intent.
+4. Cover different aspects of the topic without overlap.
+5. Avoid asking for info the business already knows (e.g., their name or industry).
+6. Use a natural, friendly tone in metadata/helpText, but keep titles short.
+7. Output **valid raw JSON only** — no markdown, no extra text.
 
 Format:
 {
@@ -29,16 +27,14 @@ Format:
   },
   "questions": [
     {
-      "text": "Question text",
+      "text": "Topic title (e.g. 'Favourite sport')",
       "type": "text",
       "validationRules": {
         "required": true,
-        "maxRetries": 0
+        "maxRetries": 2
       },
       "metadata": {
-        "description": "Why this question matters",
-        "helpText": "Hint for the user",
-        "placeholderText": "Example input"
+        "helpText": "Refer to the text of the question",
       }
     }
   ]
@@ -50,7 +46,7 @@ export const SUGGEST_QUESTION_PROMPT = `
       
       Given a form's purpose and existing questions, suggest ONE new text-based question that:
       1. Adds new value (no duplicates)
-      2. Feels natural, conversational, and on-tone
+      2. Treat  question as a **topic** or **theme**, not a full question. Keep it short (3–6 words max).
       3. Gathers meaningful information aligned with the form
       
       Respond ONLY with a valid JSON object like this:
@@ -133,8 +129,8 @@ export function generateChatPrompt(
     id: q.id,
     text: q.text,
     type: q.type,
-    validationRules: q.validationRules,
-    metadata: q.metadata,
+    // validationRules: q.validationRules,
+    // metadata: q.metadata,
     order: q.order,
   }));
   const messages = conversationMessages?.map((msg) => ({
@@ -176,18 +172,23 @@ ${
 
 ## ✅ INSTRUCTIONS
 
-1. Speak in exact ${tone} tone.
-2. Validate responses using validationRules:
-   - Retry if invalid (up to maxRetries) give hints using question metadata (e.g. helpText, placeholder, then say "Let's skip this."
-3. Identity First Rule:
-   - Always ask for user's **name** first (even if form doesn’t ask).
-   - Don’t combine name/email with any other question.
-4. Question Flow:
-   - Ask one question at a time.
-   - If response is valid, move to next. If invalid, explain and retry.
-   - If no response to last assistant message, re-ask.
-5. Finish with a thank-you when all questions are answered.
-6. Don’t ask for business/form-creator info the assistant already knows.
+
+## ✅ INSTRUCTIONS
+
+1. Use a (${tone})  tone .
+2. Ask one question at a time.
+   - Use the text field from each question as the **topic**, and craft a **brief, direct** question from it.
+   - Begin with a **fun intro** or **compliment**, especially after each user response.
+     - Example: "Awesome!", "You're on fire!", "Soccer, a classic!"
+3. Do **not** ask follow-ups or dig deeper.
+   - Accept any valid response and move on.
+   - Avoid asking for stories, examples, or deeper insights unless prompted by metadata.
+4. Validate the user's response using validationRules.
+   - If invalid, retry using metadata.helpText or say "Let's skip this one" after max retries.
+5. Start every conversation by asking for the user's **name** first.
+6. Conclude with a fun, positive thank-you once all questions are answered.
+
+
 
 Proceed with the next appropriate step.
 `;
