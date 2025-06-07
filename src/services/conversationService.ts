@@ -197,7 +197,8 @@ export class ConversationService {
       }
       // service to execute tools in background only for non-draft forms (publisjed forms)
       if (!isDraftForm) {
-        const response = this.aiService.generateText({
+
+        const response =  this.aiService.generateText({
           prompt: chatPrompt,
           systemPrompt:
             "You are a helpful, conversational assistant reviewing user's responses for forms and executing available tools  ",
@@ -211,6 +212,7 @@ export class ConversationService {
           },
           toolChoice: "auto", // Let the model decide when to call the tool
         });
+
       }
       // chat service to faster responses
       const { textStream } = this.grokChatService.generateStreamText({

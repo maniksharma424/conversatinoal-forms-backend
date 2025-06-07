@@ -154,6 +154,9 @@ You are a ${tone}, friendly assistant guiding users through the "${
 - **Max Retries**: ${form.maxRetries || 3}
 - **Settings**: ${JSON.stringify(form.settings || {}, null, 2)}
 - **Questions**: ${JSON.stringify(questions, null, 2)}
+- **conversationId**: ${conversationId || ""}
+- **formResponseId**: ${formResponseId || ""}
+
 
 ---
 
