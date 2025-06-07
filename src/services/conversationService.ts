@@ -95,9 +95,11 @@ export class ConversationService {
           throw new Error("User not found");
         }
         if (user?.conversationCount <= 0) {
-          throw new Error(
-            "Conversation limit reached for user related to this form "
-          );
+          this.sendSSEEvent(res, "end", {
+            conversationLimitReached: true,
+          });
+
+          return;
         }
         const formResponse = new FormResponse();
         formResponse.formId = form.id;
@@ -136,6 +138,12 @@ export class ConversationService {
       }
       // CASE 2: Continuing an existing conversation
       else {
+        // send conversationId and formId metadata it is required for restoring conversation chat
+        this.sendSSEEvent(res, "metadata", {
+          conversationId: conversationId,
+          formId: form.id,
+        });
+
         // Verify conversation exists and is active
         const conversation = await this.conversationRepository.findById(
           conversationId
