@@ -299,9 +299,8 @@ ${JSON.stringify(conversationMessages, null, 2)}`
 
 
 5. **Detect Completion**
-   - If the recent question is the **last question** in the form (based on order) **and** the user response is valid:
+   - If after determining the current question it came to be the last topic   the last question in the form  **and** the user response is valid:
      Call the formCompletionTool:
-
      {
        "tool": "formCompletionTool",
        "parameters": {

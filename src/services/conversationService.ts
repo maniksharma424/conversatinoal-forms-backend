@@ -14,6 +14,7 @@ import { RedisService } from "./redisService.js";
 import {
   generateChatPrompt,
   generateConversationSummaryPrompt,
+  generateToolCallingPromptForChat,
 } from "@/utils/prompts.js";
 import { Conversation } from "@/entities/conversationEntity.js";
 import { FormResponse } from "@/entities/formResponseEntity.js";
@@ -81,7 +82,7 @@ export class ConversationService {
       let form;
       let currentQuestion;
       let messages;
-      let conversation: Conversation;
+      let conversation: Conversation | null;
       let fullMessage = ""; // Variable to collect the complete message
       // Get form data (common to both cases)
       form = await this.getFormWithCache(formId);
@@ -145,7 +146,7 @@ export class ConversationService {
         });
 
         // Verify conversation exists and is active
-        const conversation = await this.conversationRepository.findById(
+        conversation = await this.conversationRepository.findById(
           conversationId
         );
 
@@ -196,10 +197,18 @@ export class ConversationService {
         );
       }
       // service to execute tools in background only for non-draft forms (publisjed forms)
-      if (!isDraftForm) {
-
-        const response =  this.aiService.generateText({
-          prompt: chatPrompt,
+      if (!isDraftForm && conversationId) {
+        console.log("chat prompt");
+        const prompt = generateToolCallingPromptForChat(
+          conversationId,
+          form,
+          question!,
+          messages,
+          answer,
+          conversation?.formResponse?.id
+        );
+        const response = this.aiService.generateText({
+          prompt: prompt,
           systemPrompt:
             "You are a helpful, conversational assistant reviewing user's responses for forms and executing available tools  ",
           maxSteps: 2, // Allow one tool call plus a final response
@@ -212,7 +221,6 @@ export class ConversationService {
           },
           toolChoice: "auto", // Let the model decide when to call the tool
         });
-
       }
       // chat service to faster responses
       const { textStream } = this.grokChatService.generateStreamText({
