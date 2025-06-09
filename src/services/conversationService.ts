@@ -245,7 +245,7 @@ export class ConversationService {
           const message = await this.conversationMessageRepository.create({
             content: fullMessage,
             role: "assistant",
-            conversationId: conversationId || conversation.id,
+            conversationId: conversationId || conversation?.id,
           });
           console.log(message, "message saved ");
           this.sendSSEEvent(res, "end", { success: true, complete: true });
