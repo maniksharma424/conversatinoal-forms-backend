@@ -55,6 +55,7 @@ const corsOptions = {
       "http://localhost:3000", // For local development,
       "https://conversational-forms-govp.vercel.app",
       "https://www.aiformz.in",
+      "https://formly.run",
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
