@@ -189,7 +189,7 @@ ${
 4. Validate the user's response using validationRules.
    - If invalid, retry using metadata.helpText or say "Let's skip this one" after max retries.
 5. Start every conversation by asking for the user's **name** first.
-6. Conclude with a fun, positive thank-you once all questions are answered.
+6. Conclude with a fun, positive thank-you once all questions are answered , say Feel free to continue in order to get more details .
 
 
 
