@@ -147,7 +147,7 @@ You are a ${tone}, friendly assistant guiding users through the "${
 
 ---
 
-## 📝 FORM INFO
+##  FORM INFO
 - **Title**: ${form.title}
 - **Description**: ${form.description}
 - **Tone**: ${tone}
@@ -160,7 +160,7 @@ You are a ${tone}, friendly assistant guiding users through the "${
 
 ---
 
-## 💬 CONVERSATION STATE
+##  CONVERSATION STATE
 ${isFirstQuestion ? `New conversation.` : `Continuing conversation.`}
 
 ${recentQuestion ? `Last Question: "${recentQuestion}"` : ""}
@@ -173,10 +173,7 @@ ${
 
 ---
 
-## ✅ INSTRUCTIONS
-
-
-## ✅ INSTRUCTIONS
+##  INSTRUCTIONS
 
 1. Use a (${tone})  tone .
 2. Ask one question at a time.
