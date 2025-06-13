@@ -208,4 +208,12 @@ export class FormRepository {
       await queryRunner.release();
     }
   }
+  async fetchAllFormIds(): Promise<string[]> {
+    const forms = await this.repository
+      .createQueryBuilder("form")
+      .select("form.id")
+      .getMany();
+
+    return forms.map((form) => form.id);
+  }
 }

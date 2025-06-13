@@ -68,6 +68,34 @@ export const getFormDetails = async (
   }
 };
 
+
+export const getAllFormIds = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    // Fetch all form IDs using the service
+    const formIds = await formService.getAllFormIds();
+
+    // Check if formIds is null (as per service return type)
+    if (formIds === null) {
+      return res.status(404).json({
+        success: false,
+        message: "No forms found",
+      });
+    }
+
+    // Return the list of form IDs
+    return res.status(200).json({
+      success: true,
+      data: formIds,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get all forms for the current user
 export const getAllFormsController = async (
   req: Request,

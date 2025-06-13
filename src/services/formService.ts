@@ -198,4 +198,8 @@ export class FormService {
       return null;
     }
   }
+
+  async getAllFormIds(): Promise<string[] | null> {
+    return this.formRepository.fetchAllFormIds();
+  }
 }

@@ -3,6 +3,7 @@ import { authenticate } from "../middleware/authMiddleware.js";
 import {
   createFormController,
   deleteFormController,
+  getAllFormIds,
   getAllFormsController,
   getFormByIdController,
   getFormDetails,
@@ -31,6 +32,8 @@ publicFormRoutes.get("/api/v1/set-session", (req, res) => {
   });
   res.json({ message: "Cookie set" });
 });
+
+publicFormRoutes.get("/public/forms/", getAllFormIds);
 
 // Apply authentication middleware to all form routes
 formRoutes.use(authenticate);
