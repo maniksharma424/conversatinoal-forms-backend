@@ -76,6 +76,7 @@ export class ConversationService {
     console.log("starting chat ..");
     // Set up SSE headers
     this.setupSSEHeaders(res);
+    res.flushHeaders(); // 🔥 ADD THIS LINE
 
     try {
       let chatPrompt: string;
