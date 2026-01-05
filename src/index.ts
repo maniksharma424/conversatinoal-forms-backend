@@ -56,6 +56,7 @@ const corsOptions = {
       "https://conversational-forms-govp.vercel.app",
       "https://www.aiformz.in",
       "https://formly.run",
+      "https://www.formly.run",
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
