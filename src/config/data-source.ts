@@ -32,10 +32,10 @@ export const AppDataSource = new DataSource({
     Product,
     Transaction
   ],
-//   migrations: [
-//   // Make sure your migrations are listed or globbed here
-//   "src/migration/*.ts"  // or something similar
-// ],
+  migrations: [
+  // Make sure your migrations are listed or globbed here
+  "src/migration/*.ts"  // or something similar
+],
   subscribers: [],
   ssl:
     ENV.NODE_ENV === "prod"
